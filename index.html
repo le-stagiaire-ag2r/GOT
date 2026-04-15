@@ -104,12 +104,12 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .btn-sec:hover{border-color:#c9a84c;color:#c9a84c}
 /* ── BACKGROUND FX ── */
 #bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
-#vignette{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(1,3,8,.62) 100%)}
-.fog-l{position:fixed;inset:0;pointer-events:none;z-index:3}
-#fog1{background:radial-gradient(ellipse 210% 50% at -15% 58%,rgba(24,46,82,.52) 0%,transparent 55%);animation:fd1 34s ease-in-out infinite alternate}
-#fog2{background:radial-gradient(ellipse 180% 45% at 115% 40%,rgba(20,38,68,.46) 0%,transparent 50%);animation:fd2 50s ease-in-out infinite alternate}
-#fog3{background:radial-gradient(ellipse 150% 35% at 50% 90%,rgba(28,50,85,.55) 0%,transparent 46%);animation:fd3 42s ease-in-out infinite alternate}
-#fog4{background:radial-gradient(ellipse 120% 25% at 28% 10%,rgba(22,42,72,.44) 0%,transparent 42%);animation:fd4 60s ease-in-out infinite alternate}
+#vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(1,3,8,.58) 100%)}
+.fog-l{position:fixed;inset:0;pointer-events:none;z-index:5}
+#fog1{background:radial-gradient(ellipse 220% 55% at -10% 55%,rgba(110,135,175,.28) 0%,transparent 52%);animation:fd1 34s ease-in-out infinite alternate}
+#fog2{background:radial-gradient(ellipse 190% 50% at 110% 40%,rgba(95,120,162,.24) 0%,transparent 50%);animation:fd2 50s ease-in-out infinite alternate}
+#fog3{background:radial-gradient(ellipse 160% 40% at 50% 92%,rgba(120,145,185,.3) 0%,transparent 46%);animation:fd3 42s ease-in-out infinite alternate}
+#fog4{background:radial-gradient(ellipse 130% 30% at 28% 8%,rgba(100,128,168,.26) 0%,transparent 44%);animation:fd4 60s ease-in-out infinite alternate}
 @keyframes fd1{0%{transform:translateX(-9%) scaleX(.9);opacity:.6}100%{transform:translateX(9%) scaleX(1.1);opacity:1}}
 @keyframes fd2{0%{transform:translateX(11%) scaleX(1.12);opacity:.7}100%{transform:translateX(-11%) scaleX(.88);opacity:1}}
 @keyframes fd3{0%{transform:translateY(-6%) scaleY(.85);opacity:.55}100%{transform:translateY(6%) scaleY(1.15);opacity:1}}
@@ -903,30 +903,32 @@ window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window
   resize();
 
   // --- STARS ---
-  var STARS=mob?70:120, stars=[];
+  var STARS=mob?80:140, stars=[];
+  var starColors=['#ffd060','#ffe8a0','#c8d8ff','#ffffff','#ffc840','#dde8ff'];
   for(var i=0;i<STARS;i++){
     stars.push({
-      x:Math.random()*W, y:Math.random()*H*.78,
-      r:Math.random()*1.1+.2,
-      ba:Math.random()*.38+.07,
+      x:Math.random()*W, y:Math.random()*H*.82,
+      r:Math.random()*1.3+.25,
+      ba:Math.random()*.55+.12,
       t:Math.random()*100,
-      ts:Math.random()*.011+.002
+      ts:Math.random()*.013+.003,
+      c:starColors[Math.floor(Math.random()*starColors.length)]
     });
   }
 
   // --- ASH / SNOW PARTICLES ---
-  var SNOW=mob?140:240, snow=[];
+  var SNOW=mob?150:260, snow=[];
   for(var i=0;i<SNOW;i++){
-    var isAsh=Math.random()<.42;
+    var isAsh=Math.random()<.35;
     snow.push({
       x:Math.random()*W, y:Math.random()*H,
-      r:Math.random()*2.2+.4,
+      r:Math.random()*2.4+.45,
       vy:Math.random()*.55+.1,
       vx:(Math.random()-.5)*.35,
-      a:Math.random()*.55+.1,
+      a:Math.random()*.65+.15,
       t:Math.random()*100,
       ts:Math.random()*.016+.004,
-      rgb:isAsh?'172,163,152':'238,232,222'
+      rgb:isAsh?'180,172,162':'255,255,255'
     });
   }
 
@@ -958,15 +960,18 @@ window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window
     for(var i=0;i<stars.length;i++){
       var s=stars[i];
       s.t+=s.ts;
-      var a=s.ba+Math.sin(s.t)*s.ba*.7;
+      var a=s.ba+Math.sin(s.t)*s.ba*.75;
       if(a<0)a=0;
+      ctx.save();
       ctx.globalAlpha=a;
-      ctx.fillStyle='#e0dbd2';
+      ctx.shadowBlur=s.r>1?7:4;
+      ctx.shadowColor=s.c;
+      ctx.fillStyle=s.c;
       ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill();
+      ctx.restore();
     }
 
     // Ash/snow
-    ctx.shadowBlur=0;
     for(var i=0;i<snow.length;i++){
       var p=snow[i];
       p.t+=p.ts;
@@ -974,9 +979,13 @@ window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window
       p.y+=p.vy;
       if(p.y>H+4){p.x=Math.random()*W;p.y=-4;}
       if(p.x<-4)p.x=W+4; else if(p.x>W+4)p.x=-4;
+      ctx.save();
       ctx.globalAlpha=p.a;
-      ctx.fillStyle='rgba('+p.rgb+','+p.a+')';
+      if(p.rgb==='255,255,255'){ctx.shadowBlur=5;ctx.shadowColor='rgba(220,235,255,.7)';}
+      else{ctx.shadowBlur=0;}
+      ctx.fillStyle='rgba('+p.rgb+',1)';
       ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill();
+      ctx.restore();
     }
 
     // Embers (glow via shadowBlur)
