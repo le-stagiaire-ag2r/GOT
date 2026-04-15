@@ -104,16 +104,16 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .btn-sec:hover{border-color:#c9a84c;color:#c9a84c}
 /* ── BACKGROUND FX ── */
 #bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
-#vignette{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 35%,rgba(1,3,8,.92) 100%)}
+#vignette{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(1,3,8,.62) 100%)}
 .fog-l{position:fixed;inset:0;pointer-events:none;z-index:3}
-#fog1{background:radial-gradient(ellipse 200% 45% at -15% 58%,rgba(5,12,28,.6) 0%,transparent 52%);animation:fd1 34s ease-in-out infinite alternate}
-#fog2{background:radial-gradient(ellipse 170% 40% at 115% 42%,rgba(4,9,22,.5) 0%,transparent 48%);animation:fd2 50s ease-in-out infinite alternate}
-#fog3{background:radial-gradient(ellipse 140% 30% at 50% 88%,rgba(2,6,16,.65) 0%,transparent 42%);animation:fd3 42s ease-in-out infinite alternate}
-#fog4{background:radial-gradient(ellipse 110% 20% at 30% 12%,rgba(6,10,24,.4) 0%,transparent 40%);animation:fd4 60s ease-in-out infinite alternate}
-@keyframes fd1{0%{transform:translateX(-9%) scaleX(.9);opacity:.55}100%{transform:translateX(9%) scaleX(1.1);opacity:1}}
-@keyframes fd2{0%{transform:translateX(11%) scaleX(1.12);opacity:.65}100%{transform:translateX(-11%) scaleX(.88);opacity:1}}
-@keyframes fd3{0%{transform:translateY(-6%) scaleY(.85);opacity:.45}100%{transform:translateY(6%) scaleY(1.15);opacity:.9}}
-@keyframes fd4{0%{transform:translateX(-7%) scaleX(.93);opacity:.4}100%{transform:translateX(7%) scaleX(1.07);opacity:.85}}
+#fog1{background:radial-gradient(ellipse 210% 50% at -15% 58%,rgba(24,46,82,.52) 0%,transparent 55%);animation:fd1 34s ease-in-out infinite alternate}
+#fog2{background:radial-gradient(ellipse 180% 45% at 115% 40%,rgba(20,38,68,.46) 0%,transparent 50%);animation:fd2 50s ease-in-out infinite alternate}
+#fog3{background:radial-gradient(ellipse 150% 35% at 50% 90%,rgba(28,50,85,.55) 0%,transparent 46%);animation:fd3 42s ease-in-out infinite alternate}
+#fog4{background:radial-gradient(ellipse 120% 25% at 28% 10%,rgba(22,42,72,.44) 0%,transparent 42%);animation:fd4 60s ease-in-out infinite alternate}
+@keyframes fd1{0%{transform:translateX(-9%) scaleX(.9);opacity:.6}100%{transform:translateX(9%) scaleX(1.1);opacity:1}}
+@keyframes fd2{0%{transform:translateX(11%) scaleX(1.12);opacity:.7}100%{transform:translateX(-11%) scaleX(.88);opacity:1}}
+@keyframes fd3{0%{transform:translateY(-6%) scaleY(.85);opacity:.55}100%{transform:translateY(6%) scaleY(1.15);opacity:1}}
+@keyframes fd4{0%{transform:translateX(-7%) scaleX(.93);opacity:.5}100%{transform:translateX(7%) scaleX(1.07);opacity:.95}}
 </style>
 </head>
 <body>
@@ -903,46 +903,46 @@ window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window
   resize();
 
   // --- STARS ---
-  var STARS=mob?50:95, stars=[];
+  var STARS=mob?70:120, stars=[];
   for(var i=0;i<STARS;i++){
     stars.push({
       x:Math.random()*W, y:Math.random()*H*.78,
-      r:Math.random()*.85+.12,
-      ba:Math.random()*.22+.035,
+      r:Math.random()*1.1+.2,
+      ba:Math.random()*.38+.07,
       t:Math.random()*100,
       ts:Math.random()*.011+.002
     });
   }
 
   // --- ASH / SNOW PARTICLES ---
-  var SNOW=mob?95:175, snow=[];
+  var SNOW=mob?140:240, snow=[];
   for(var i=0;i<SNOW;i++){
     var isAsh=Math.random()<.42;
     snow.push({
       x:Math.random()*W, y:Math.random()*H,
-      r:Math.random()*1.55+.22,
-      vy:Math.random()*.52+.1,
-      vx:(Math.random()-.5)*.32,
-      a:Math.random()*.28+.04,
+      r:Math.random()*2.2+.4,
+      vy:Math.random()*.55+.1,
+      vx:(Math.random()-.5)*.35,
+      a:Math.random()*.55+.1,
       t:Math.random()*100,
       ts:Math.random()*.016+.004,
-      rgb:isAsh?'148,138,128':'225,218,208'
+      rgb:isAsh?'172,163,152':'238,232,222'
     });
   }
 
   // --- EMBERS ---
-  var EMBERS=mob?20:42, embers=[];
+  var EMBERS=mob?30:58, embers=[];
   function mkE(init){
     var h=Math.floor(Math.random()*40+3);
-    var l=Math.floor(Math.random()*16+56);
+    var l=Math.floor(Math.random()*20+60);
     var ml=Math.floor(Math.random()*150+75);
     return {
       x:Math.random()*W,
       y:init?Math.random()*H:H+6,
-      r:Math.random()*1.7+.45,
+      r:Math.random()*2.4+.6,
       vy:Math.random()*1.05+.22,
       vx:(Math.random()-.5)*.65,
-      a:0, ma:Math.random()*.72+.14,
+      a:0, ma:Math.random()*.9+.25,
       t:Math.random()*100, ts:Math.random()*.032+.007,
       life:init?Math.floor(Math.random()*ml):0,
       ml:ml,
@@ -958,10 +958,10 @@ window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window
     for(var i=0;i<stars.length;i++){
       var s=stars[i];
       s.t+=s.ts;
-      var a=s.ba+Math.sin(s.t)*s.ba*.55;
+      var a=s.ba+Math.sin(s.t)*s.ba*.7;
       if(a<0)a=0;
       ctx.globalAlpha=a;
-      ctx.fillStyle='#c8c2b8';
+      ctx.fillStyle='#e0dbd2';
       ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill();
     }
 
@@ -992,8 +992,8 @@ window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window
       else e.a=e.ma;
       if(e.life>e.ml||e.y<-10){embers[i]=mkE(false);continue;}
       ctx.save();
-      ctx.globalAlpha=e.a*.82;
-      ctx.shadowBlur=16;ctx.shadowColor=e.hsl;
+      ctx.globalAlpha=e.a*.88;
+      ctx.shadowBlur=22;ctx.shadowColor=e.hsl;
       ctx.fillStyle=e.hsl;
       ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,6.283);ctx.fill();
       // bright hot core
