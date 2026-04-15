@@ -250,6 +250,11 @@ select.inp option{background:#0c0804;color:#f0ddb0}
         <button class="pbtn pbtn-g" onclick="adminAdvance()">⚔ VALIDER</button>
         <div class="pmsg" id="adminMsg3"></div>
         <div class="psep"></div>
+        <div class="plbl">SUPPRIMER UN JOUEUR</div>
+        <select class="inp" id="adminSelDel"></select>
+        <button class="pbtn pbtn-r" onclick="deletePlayer()" style="margin-top:4px">✕ SUPPRIMER CE JOUEUR</button>
+        <div class="pmsg" id="adminMsg4"></div>
+        <div class="psep"></div>
         <div class="plbl">QUÊTE ACTIVE</div>
         <select class="inp" id="adminMonth"></select>
         <button class="pbtn pbtn-g" onclick="setActiveMonth()" style="margin-top:4px">⚔ ACTIVER CE MOIS</button>
@@ -272,7 +277,7 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 var WP = [
   {n:"Kings Landing 1/3",         x:732, y:1263, cross:false},
@@ -670,11 +675,24 @@ function checkAdmin(){
   }
 }
 function populateAdminSel(){
-  var sel=document.getElementById("adminSel");
-  sel.innerHTML='<option value="">-- Joueur --</option>';
+  var opts='<option value="">-- Joueur --</option>';
   PLAYERS.slice().sort(function(a,b){return b.pos-a.pos;}).forEach(function(p){
-    sel.innerHTML+='<option value="'+p.id+'">'+p.avatar+" "+p.name+" (Case "+(p.pos+1)+")</option>";
+    opts+='<option value="'+p.id+'">'+p.avatar+" "+p.name+" (Case "+(p.pos+1)+")</option>";
   });
+  document.getElementById("adminSel").innerHTML=opts;
+  document.getElementById("adminSelDel").innerHTML=opts;
+}
+async function deletePlayer(){
+  var pid=document.getElementById("adminSelDel").value;
+  if(!pid){document.getElementById("adminMsg4").textContent="Choisissez un joueur.";return;}
+  var player=PLAYERS.find(function(p){return p.id===pid;});
+  if(!player)return;
+  if(!confirm("Supprimer "+player.name+" définitivement ?"))return;
+  try{
+    await deleteDoc(doc(db,'players',pid));
+    document.getElementById("adminMsg4").textContent=player.name+" supprimé.";
+    notify("Joueur supprimé : "+player.name);
+  }catch(e){document.getElementById("adminMsg4").textContent="Erreur.";}
 }
 function populateMonthSel(){
   var sel=document.getElementById("adminMonth"); sel.innerHTML="";
@@ -821,7 +839,7 @@ window.answer=answer; window.nextQuestion=nextQuestion;
 window.checkAdmin=checkAdmin; window.addQuestion=addQuestion;
 window.removeDraftQ=removeDraftQ; window.refreshQPreview=refreshQPreview;
 window.publishQuest=publishQuest; window.setActiveMonth=setActiveMonth;
-window.adminAdvance=adminAdvance; window.resetSeason=resetSeason;
+window.adminAdvance=adminAdvance; window.deletePlayer=deletePlayer; window.resetSeason=resetSeason;
 window.populateStepSel=populateStepSel;
 window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP;
 </script>
