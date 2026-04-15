@@ -119,7 +119,7 @@ select.inp option{background:#0c0804;color:#f0ddb0}
       <div class="rule-item"><div class="ri">👥</div><div class="rt"><h3>COMPÉTITION EN LIVE</h3><p>Voyez en temps réel où se trouvent vos collègues sur la carte. Le premier à The Wall remporte la saison !</p></div></div>
       <div class="rule-item"><div class="ri">✕</div><div class="rt"><h3>CHECKPOINTS</h3><p>Tous les 3 cases, une croix marque une étape clé correspondant à une zone de Westeros.</p></div></div>
     </div>
-    <div class="bfoot"><button class="btn-main" onclick="goTo('sAvatar')">CHOISIR MON AVATAR ⚔</button></div>
+    <div class="bfoot"><button class="btn-main" onclick="startJourney()">CHOISIR MON AVATAR ⚔</button></div>
   </div>
 </div>
 
@@ -270,7 +270,10 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 </div>
 <div id="notif"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
 var WP = [
   {n:"Kings Landing 1/3",         x:732, y:1263, cross:false},
   {n:"Kings Landing 2/3",         x:833, y:1293, cross:false},
@@ -319,6 +322,17 @@ var QUESTIONS = [
   }
 ];
 
+var firebaseConfig = {
+  apiKey: "AIzaSyCa9Gqtw03dVWI2PUXRbSmCi9h-XbYrH-k",
+  authDomain: "gott-dec3c.firebaseapp.com",
+  projectId: "gott-dec3c",
+  storageBucket: "gott-dec3c.firebasestorage.app",
+  messagingSenderId: "481974595884",
+  appId: "1:481974595884:web:65bce5360a1dba8f7dbc89"
+};
+var app = initializeApp(firebaseConfig);
+var db = getFirestore(app);
+
 var ME = null;
 var PLAYERS = [];
 var curMonth = 0;
@@ -330,6 +344,12 @@ var drag = false, sx = 0, sy = 0, spx = 0, spy = 0;
 var selectedAv = "⚔";
 var COLORS = ["#3a78cc","#b03535","#c88018","#406890","#7a5018","#7a4888","#2a8858","#885020","#305888","#804080","#508840","#886040"];
 
+function genUUID(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){
+    var r=Math.random()*16|0,v=c=='x'?r:(r&0x3|0x8);return v.toString(16);
+  });
+}
+
 // ── SCREENS ──
 function goTo(id) {
   document.querySelectorAll(".screen").forEach(function(s){
@@ -337,10 +357,30 @@ function goTo(id) {
     s.style.display = "none";
   });
   var el = document.getElementById(id);
-  // sGame uses block not flex (it has its own internal layout)
   el.style.display = (id === "sGame") ? "block" : "flex";
   el.classList.add("active");
   if(id === "sAdmin") { populateAdminSel(); populateMonthSel(); refreshQPreview(); }
+}
+
+// ── AUTO LOGIN ──
+async function startJourney() {
+  var pid = localStorage.getItem("wc_playerId");
+  if(pid){
+    try{
+      var snap = await getDoc(doc(db,'players',pid));
+      if(snap.exists()){
+        var data = snap.data();
+        ME = {id:pid, name:data.name, avatar:data.avatar, pos:data.pos, col:data.col, brd:data.brd};
+        updateBadge();
+        goTo("sGame");
+        resetView();
+        refresh();
+        return;
+      }
+    }catch(e){}
+    localStorage.removeItem("wc_playerId");
+  }
+  goTo("sAvatar");
 }
 
 // ── AVATAR ──
@@ -361,23 +401,31 @@ function buildAvatarGrid() {
   });
 }
 
-function confirmAvatar() {
+async function confirmAvatar() {
   var name = document.getElementById("playerName").value.trim();
-  if(!name){ notify("Entrez votre prenom !"); return; }
-  var col = COLORS[PLAYERS.length % COLORS.length];
-  var found = null;
-  PLAYERS.forEach(function(p){ if(p.name===name) found=p; });
-  if(found) {
-    ME = found;
-  } else {
-    ME = {name:name, avatar:selectedAv, pos:0, col:col, brd:col};
-    PLAYERS.push(ME);
-  }
-  updateBadge();
-  saveState();
-  goTo("sGame");
-  resetView();
-  refresh();
+  if(!name){ notify("Entrez votre prénom !"); return; }
+  var pid = localStorage.getItem("wc_playerId") || genUUID();
+  try{
+    var snap = await getDoc(doc(db,'players',pid));
+    var col = COLORS[PLAYERS.length % COLORS.length];
+    var pos = 0;
+    if(snap.exists()){ col = snap.data().col; pos = snap.data().pos; }
+    ME = {id:pid, name:name, avatar:selectedAv, pos:pos, col:col, brd:col};
+    await setDoc(doc(db,'players',pid), {name:name, avatar:selectedAv, pos:pos, col:col, brd:col});
+    localStorage.setItem("wc_playerId", pid);
+    updateBadge();
+    goTo("sGame");
+    resetView();
+    refresh();
+  }catch(e){ notify("Erreur de connexion. Réessayez."); }
+}
+
+// ── SAVE PLAYER ──
+async function savePlayer(){
+  if(!ME) return;
+  var pid = localStorage.getItem("wc_playerId");
+  if(!pid) return;
+  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos}); }catch(e){}
 }
 
 // ── SVG HELPER ──
@@ -440,7 +488,7 @@ function renderPP() {
   PLAYERS.forEach(function(p,pi){
     var wp = WP[p.pos];
     var off = offs[pi%offs.length];
-    var isMe = ME && p.name===ME.name;
+    var isMe = ME && p.id===ME.id;
     var grp = svgEl("g");
     grp.setAttribute("transform","translate("+(wp.x+off[0])+","+(wp.y+off[1])+")");
     var sh=svgEl("ellipse"); sh.setAttribute("rx","11"); sh.setAttribute("ry","5"); sh.setAttribute("cy","14");
@@ -464,7 +512,7 @@ function renderPP() {
 function renderBar() {
   var bar = document.getElementById("bot"); bar.innerHTML = "";
   PLAYERS.slice().sort(function(a,b){return b.pos-a.pos;}).forEach(function(p){
-    var isMe = ME && p.name===ME.name;
+    var isMe = ME && p.id===ME.id;
     var d = document.createElement("div");
     d.className = "chip"+(isMe?" me":"");
     d.style.borderColor = isMe?p.brd:"#2a1a06";
@@ -574,8 +622,7 @@ function answer(chosen){
   var nextBtn='<button onclick="nextQuestion()" style="width:100%;margin-top:12px;padding:10px;font-family:Cinzel,serif;font-size:10px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080">'+(isLast?"⚔ RÉSUMÉ DU MOIS":"QUESTION SUIVANTE →")+"</button>";
   if(chosen===q.c){
     monthScore++;
-    if(ME)ME.pos=Math.min(ME.pos+1,23);
-    saveState();
+    if(ME){ME.pos=Math.min(ME.pos+1,23); savePlayer();}
     document.getElementById("qprog").style.width=(monthScore/3*100)+"%";
     setTimeout(function(){refresh();updateBadge();},300);
     if(ME&&ME.pos===23)setTimeout(function(){notify("👑 "+ME.name+" atteint The Wall !");},600);
@@ -599,7 +646,7 @@ function buildLB(){
   var medals=["🥇","🥈","🥉"];
   return '<div class="ph"><div class="ph-t">⚔ CLASSEMENT — SAISON I</div><button class="ph-c" onclick="closeOv()">✕</button></div>'
     +PLAYERS.slice().sort(function(a,b){return b.pos-a.pos;}).map(function(p,i){
-      var isMe=ME&&p.name===ME.name;
+      var isMe=ME&&p.id===ME.id;
       return '<div class="lbrow'+(isMe?" lbme":"")+'"><div class="lbrank '+(i<3?"top":"")+'">'+( medals[i]||i+1)+'</div>'
         +'<div class="lbav">'+p.avatar+'</div><div class="lbinfo">'
         +'<div style="display:flex;justify-content:space-between"><span class="lbname">'+p.name+(isMe?' ★':'')+'</span><span class="lbsc">Case '+(p.pos+1)+'/24</span></div>'
@@ -625,7 +672,9 @@ function checkAdmin(){
 function populateAdminSel(){
   var sel=document.getElementById("adminSel");
   sel.innerHTML='<option value="">-- Joueur --</option>';
-  PLAYERS.forEach(function(p,i){sel.innerHTML+='<option value="'+i+'">'+p.avatar+" "+p.name+" (Case "+(p.pos+1)+")</option>";});
+  PLAYERS.slice().sort(function(a,b){return b.pos-a.pos;}).forEach(function(p){
+    sel.innerHTML+='<option value="'+p.id+'">'+p.avatar+" "+p.name+" (Case "+(p.pos+1)+")</option>";
+  });
 }
 function populateMonthSel(){
   var sel=document.getElementById("adminMonth"); sel.innerHTML="";
@@ -671,39 +720,54 @@ function refreshQPreview(){
       +'</div>';
   }).join("");
 }
-function publishQuest(){
+async function publishQuest(){
   if(draftQuestions.length===0){document.getElementById("adminMsg2").textContent="Ajoutez au moins 1 question.";return;}
   var now=new Date();
-  var months=["Janvier","Fevrier","Mars","Avril","Mai","Juin","Juillet","Aout","Septembre","Octobre","Novembre","Decembre"];
+  var months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
   var monthName=months[now.getMonth()]+" "+now.getFullYear();
   QUESTIONS.push({month:monthName,qs:draftQuestions.slice()});
   curMonth=QUESTIONS.length-1; curQ=0; monthScore=0; qAnswered=false;
   draftQuestions=[];
   refreshQPreview();
-  document.getElementById("adminMsg2").textContent="Quete publiee pour "+monthName+" !";
-  notify("⚔ Nouvelle quete publiee !");
-  saveState();
-  populateMonthSel();
+  try{
+    await setDoc(doc(db,'gameState','main'),{curMonth:curMonth,questions:QUESTIONS});
+    document.getElementById("adminMsg2").textContent="Quête publiée pour "+monthName+" !";
+    notify("⚔ Nouvelle quête publiée !");
+    populateMonthSel();
+  }catch(e){document.getElementById("adminMsg2").textContent="Erreur de publication.";}
 }
-function setActiveMonth(){
+async function setActiveMonth(){
   curMonth=parseInt(document.getElementById("adminMonth").value)||0;
   curQ=0; monthScore=0; qAnswered=false;
-  notify("Quete activee : "+QUESTIONS[curMonth].month);
+  try{
+    await updateDoc(doc(db,'gameState','main'),{curMonth:curMonth});
+    notify("Quête activée : "+QUESTIONS[curMonth].month);
+  }catch(e){notify("Erreur de mise à jour.");}
 }
-function adminAdvance(){
-  var idx=parseInt(document.getElementById("adminSel").value);
+async function adminAdvance(){
+  var pid=document.getElementById("adminSel").value;
   var pts=parseInt(document.getElementById("adminPts").value)||0;
-  if(isNaN(idx)){document.getElementById("adminMsg3").textContent="Choisissez un joueur.";return;}
-  PLAYERS[idx].pos=Math.min(PLAYERS[idx].pos+pts,23);
-  document.getElementById("adminMsg3").textContent=PLAYERS[idx].name+" avance de "+pts+" case(s).";
-  populateAdminSel(); refresh();
+  if(!pid){document.getElementById("adminMsg3").textContent="Choisissez un joueur.";return;}
+  var player=PLAYERS.find(function(p){return p.id===pid;});
+  if(!player)return;
+  var newPos=Math.min(player.pos+pts,23);
+  try{
+    await updateDoc(doc(db,'players',pid),{pos:newPos});
+    document.getElementById("adminMsg3").textContent=player.name+" avance de "+pts+" case(s).";
+    populateAdminSel();
+  }catch(e){document.getElementById("adminMsg3").textContent="Erreur.";}
 }
-function resetSeason(){
-  if(!confirm("Reinitialiser toute la saison ?"))return;
-  PLAYERS.forEach(function(p){p.pos=0;});
-  if(ME)ME.pos=0;
-  curQ=0;monthScore=0;qAnswered=false;curMonth=0;
-  refresh();updateBadge();notify("Saison reinitialisee.");
+async function resetSeason(){
+  if(!confirm("Réinitialiser toute la saison ?"))return;
+  try{
+    var batch=writeBatch(db);
+    PLAYERS.forEach(function(p){batch.update(doc(db,'players',p.id),{pos:0});});
+    await batch.commit();
+    if(ME)ME.pos=0;
+    curQ=0;monthScore=0;qAnswered=false;curMonth=0;
+    await updateDoc(doc(db,'gameState','main'),{curMonth:0});
+    refresh();updateBadge();notify("Saison réinitialisée.");
+  }catch(e){notify("Erreur lors du reset.");}
 }
 function updateBadge(){
   if(!ME)return;
@@ -713,25 +777,32 @@ function updateBadge(){
 function notify(msg){var n=document.getElementById("notif");n.textContent=msg;n.classList.add("show");setTimeout(function(){n.classList.remove("show");},3500);}
 function refresh(){renderWP();renderPP();renderBar();}
 
-// ── PERSISTENCE localStorage ──
-function saveState(){
-  try{
-    localStorage.setItem("wc_questions", JSON.stringify(QUESTIONS));
-    localStorage.setItem("wc_players", JSON.stringify(PLAYERS));
-    localStorage.setItem("wc_curMonth", curMonth);
-  }catch(e){}
+// ── LISTENERS FIREBASE ──
+function startListeners(){
+  var myPid=localStorage.getItem("wc_playerId");
+  onSnapshot(collection(db,'players'),function(snap){
+    PLAYERS=[];
+    snap.forEach(function(d){
+      var p=Object.assign({id:d.id},d.data());
+      PLAYERS.push(p);
+      if(myPid&&d.id===myPid&&ME){ME.pos=p.pos;ME.name=p.name;ME.avatar=p.avatar;}
+    });
+    refresh();
+    if(ME)updateBadge();
+    if(document.getElementById("sAdmin").classList.contains("active"))populateAdminSel();
+  });
+  onSnapshot(doc(db,'gameState','main'),function(snap){
+    if(snap.exists()){
+      var data=snap.data();
+      if(data.questions&&data.questions.length>0)QUESTIONS=data.questions;
+      if(typeof data.curMonth==='number'){
+        var prev=curMonth; curMonth=data.curMonth;
+        if(prev!==curMonth){curQ=0;monthScore=0;qAnswered=false;}
+      }
+      if(document.getElementById("sAdmin").classList.contains("active"))populateMonthSel();
+    }
+  });
 }
-function loadState(){
-  try{
-    var q=localStorage.getItem("wc_questions");
-    var p=localStorage.getItem("wc_players");
-    var m=localStorage.getItem("wc_curMonth");
-    if(q) QUESTIONS=JSON.parse(q);
-    if(p) PLAYERS=JSON.parse(p);
-    if(m) curMonth=parseInt(m)||0;
-  }catch(e){}
-}
-loadState();
 
 // Triple-clic sur le titre = accès admin
 var cc=0;
@@ -741,6 +812,18 @@ document.querySelector(".brand").addEventListener("click",function(){
 });
 
 buildAvatarGrid();
+startListeners();
+
+// ── EXPOSE AU DOM ──
+window.goTo=goTo; window.startJourney=startJourney; window.confirmAvatar=confirmAvatar;
+window.nav=nav; window.closeOv=closeOv; window.closeOverlay=closeOverlay;
+window.answer=answer; window.nextQuestion=nextQuestion;
+window.checkAdmin=checkAdmin; window.addQuestion=addQuestion;
+window.removeDraftQ=removeDraftQ; window.refreshQPreview=refreshQPreview;
+window.publishQuest=publishQuest; window.setActiveMonth=setActiveMonth;
+window.adminAdvance=adminAdvance; window.resetSeason=resetSeason;
+window.populateStepSel=populateStepSel;
+window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP;
 </script>
 </body>
 </html>
