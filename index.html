@@ -280,6 +280,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/fireba
 import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 var WP = [
+  {n:"Départ",                     x:760, y:1390, cross:false},
   {n:"Kings Landing 1/3",         x:732, y:1263, cross:false},
   {n:"Kings Landing 2/3",         x:833, y:1293, cross:false},
   {n:"Kings Landing 3/3",         x:954, y:1202, cross:true},
@@ -442,8 +443,9 @@ function renderWP() {
   WP.forEach(function(wp, i) {
     var here = PLAYERS.some(function(p){ return p.pos===i; });
     var done = ME && ME.pos > i;
-    var isEnd = i===23;
-    var r = isEnd?16 : wp.cross?13 : 9;
+    var isEnd = i===24;
+    var isStart = i===0;
+    var r = isEnd?16 : isStart?11 : wp.cross?13 : 9;
     var grp = svgEl("g");
     grp.setAttribute("transform","translate("+wp.x+","+wp.y+")");
     grp.style.cursor = "pointer";
@@ -451,21 +453,21 @@ function renderWP() {
 
     if(here||isEnd){
       var pu=svgEl("circle"); pu.setAttribute("r",r+8); pu.setAttribute("fill","none");
-      pu.setAttribute("stroke",isEnd?"#f0d060":"#c8922a");
+      pu.setAttribute("stroke",isEnd?"#f0d060":isStart?"#60c860":"#c8922a");
       pu.setAttribute("stroke-width","1"); pu.setAttribute("opacity","0.4");
       grp.appendChild(pu);
     }
     var c=svgEl("circle"); c.setAttribute("r",r);
-    c.setAttribute("fill",isEnd?"#2a1400":wp.cross?"rgba(180,40,40,.35)":done?"rgba(201,168,76,.2)":"rgba(5,3,1,.85)");
-    c.setAttribute("stroke",isEnd?"#f0d060":wp.cross?"#e06060":here?"#f0a020":done?"#c8922a":"#4a3010");
-    c.setAttribute("stroke-width",isEnd||here?"2.5":wp.cross?"2":"1");
+    c.setAttribute("fill",isEnd?"#2a1400":isStart?"rgba(20,80,20,.7)":wp.cross?"rgba(180,40,40,.35)":done?"rgba(201,168,76,.2)":"rgba(5,3,1,.85)");
+    c.setAttribute("stroke",isEnd?"#f0d060":isStart?"#60c860":wp.cross?"#e06060":here?"#f0a020":done?"#c8922a":"#4a3010");
+    c.setAttribute("stroke-width",isEnd||here||isStart?"2.5":wp.cross?"2":"1");
     grp.appendChild(c);
 
     var ic=svgEl("text"); ic.setAttribute("text-anchor","middle"); ic.setAttribute("dominant-baseline","central");
-    ic.setAttribute("font-size",isEnd?"14":wp.cross?"11":"8");
-    ic.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#f0a080":"#c8922a");
+    ic.setAttribute("font-size",isEnd?"14":isStart?"10":wp.cross?"11":"8");
+    ic.setAttribute("fill",isEnd?"#f0d060":isStart?"#90f090":wp.cross?"#f0a080":"#c8922a");
     ic.setAttribute("font-family","Cinzel,serif");
-    ic.textContent = isEnd?"👑":wp.cross?"X":(i+1);
+    ic.textContent = isEnd?"👑":isStart?"▶":wp.cross?"X":i;
     grp.appendChild(ic);
 
     var lbTxt = wp.n.replace(/ [0-9]+\/[0-9]+$/,"");
@@ -489,28 +491,58 @@ function renderWP() {
 // ── RENDER PLAYERS ──
 function renderPP() {
   var g = document.getElementById("ppG"); g.innerHTML = "";
-  var offs = [[-14,-16],[14,-16],[-22,5],[0,5],[22,5],[-14,20],[14,20],[0,-22]];
-  PLAYERS.forEach(function(p,pi){
-    var wp = WP[p.pos];
-    var off = offs[pi%offs.length];
-    var isMe = ME && p.id===ME.id;
-    var grp = svgEl("g");
-    grp.setAttribute("transform","translate("+(wp.x+off[0])+","+(wp.y+off[1])+")");
-    var sh=svgEl("ellipse"); sh.setAttribute("rx","11"); sh.setAttribute("ry","5"); sh.setAttribute("cy","14");
-    sh.setAttribute("fill","rgba(0,0,0,.55)"); grp.appendChild(sh);
-    if(isMe){
+  var byPos = {};
+  PLAYERS.forEach(function(p){
+    if(!byPos[p.pos]) byPos[p.pos]=[];
+    byPos[p.pos].push(p);
+  });
+  Object.keys(byPos).forEach(function(posStr){
+    var pos=parseInt(posStr);
+    var group=byPos[pos];
+    var wp=WP[pos];
+    var hasMe=ME&&group.some(function(p){return p.id===ME.id;});
+    var single=group.length===1;
+    var grp=svgEl("g");
+    grp.setAttribute("transform","translate("+(wp.x+20)+","+(wp.y-20)+")");
+    grp.style.cursor="pointer";
+    grp.addEventListener("click",function(){showPlayersAt(pos,group);});
+    if(hasMe){
       var gl=svgEl("circle"); gl.setAttribute("r","17"); gl.setAttribute("fill","none");
-      gl.setAttribute("stroke",p.brd); gl.setAttribute("stroke-width","2"); gl.setAttribute("opacity","0.7");
+      gl.setAttribute("stroke","#f0d080"); gl.setAttribute("stroke-width","2"); gl.setAttribute("opacity","0.85");
       grp.appendChild(gl);
     }
-    var bd=svgEl("circle"); bd.setAttribute("r","12");
-    bd.setAttribute("fill",p.col); bd.setAttribute("stroke",p.brd);
-    bd.setAttribute("stroke-width",isMe?"3":"1.5");
-    grp.appendChild(bd);
-    var av=svgEl("text"); av.setAttribute("text-anchor","middle"); av.setAttribute("dominant-baseline","central");
-    av.setAttribute("font-size","11"); av.textContent=p.avatar; grp.appendChild(av);
+    var bg=svgEl("circle"); bg.setAttribute("r","13");
+    bg.setAttribute("fill",hasMe?"rgba(201,168,76,0.88)":"rgba(20,12,4,0.92)");
+    bg.setAttribute("stroke",hasMe?"#f0d080":"#6a4e14"); bg.setAttribute("stroke-width","1.5");
+    grp.appendChild(bg);
+    var txt=svgEl("text"); txt.setAttribute("text-anchor","middle"); txt.setAttribute("dominant-baseline","central");
+    txt.setAttribute("font-family","Cinzel,serif"); txt.setAttribute("font-weight","bold");
+    if(single){
+      txt.setAttribute("font-size","11"); txt.textContent=group[0].avatar;
+    } else {
+      txt.setAttribute("font-size","10"); txt.setAttribute("fill",hasMe?"#3a2000":"#c9a84c");
+      txt.textContent=group.length;
+    }
+    grp.appendChild(txt);
     g.appendChild(grp);
   });
+}
+
+function showPlayersAt(pos, group){
+  var wp=WP[pos];
+  var p=document.getElementById("panel");
+  p.innerHTML='<div class="ph"><div class="ph-t">📍 '+wp.n+'</div><button class="ph-c" onclick="closeOv()">✕</button></div>'
+    +'<div class="pb2">'
+    +group.map(function(pl){
+      var isMe=ME&&pl.id===ME.id;
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #1a1208">'
+        +'<span style="font-size:24px">'+pl.avatar+'</span>'
+        +'<span style="font-family:Cinzel,serif;font-size:13px;color:'+pl.brd+'">'+pl.name+(isMe?' ★':'')+'</span>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+  var ov=document.getElementById("overlay");
+  ov.style.display="flex"; ov.style.zIndex="999";
 }
 
 // ── RENDER BAR ──
@@ -523,8 +555,8 @@ function renderBar() {
     d.style.borderColor = isMe?p.brd:"#2a1a06";
     d.innerHTML = '<div class="cav">'+p.avatar+'</div><div>'
       +'<div class="cn" style="color:'+p.brd+'">'+p.name+(isMe?' ★':'')+'</div>'
-      +'<div class="cl">'+WP[p.pos].n.split(" ")[0]+' · Case '+(p.pos+1)+'</div>'
-      +'<div class="cbar"><div class="cfill" style="width:'+Math.round(p.pos/23*100)+'%;background:'+p.brd+'"></div></div>'
+      +'<div class="cl">'+(p.pos===0?'Départ':WP[p.pos].n.split(" ")[0]+' · Case '+p.pos)+'</div>'
+      +'<div class="cbar"><div class="cfill" style="width:'+Math.round(p.pos/24*100)+'%;background:'+p.brd+'"></div></div>'
       +'</div>';
     bar.appendChild(d);
   });
@@ -606,7 +638,7 @@ function buildQuest(){
   if(!mdata) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">Aucune quete disponible. Revenez bientot !</div></div>';
   if(curQ>=mdata.qs.length) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">⚔ Toutes les epreuves de ce mois ont ete relevees !<br><br>Revenez le mois prochain.</div></div>';
   var q=mdata.qs[curQ];
-  var nxt=WP[Math.min((ME?ME.pos:0)+1,23)];
+  var nxt=WP[Math.min((ME?ME.pos:0)+1,24)];
   return '<div class="ph"><div><div class="ph-t">📜 '+mdata.month+'</div><div style="font-family:Cinzel,serif;font-size:9px;color:#6a4e14;letter-spacing:1px;margin-top:3px">Question '+(curQ+1)+' / '+mdata.qs.length+'</div></div>'
     +'<button class="ph-c" onclick="closeOv()">✕</button></div>'
     +'<div class="pb2">'
@@ -627,10 +659,10 @@ function answer(chosen){
   var nextBtn='<button onclick="nextQuestion()" style="width:100%;margin-top:12px;padding:10px;font-family:Cinzel,serif;font-size:10px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080">'+(isLast?"⚔ RÉSUMÉ DU MOIS":"QUESTION SUIVANTE →")+"</button>";
   if(chosen===q.c){
     monthScore++;
-    if(ME){ME.pos=Math.min(ME.pos+1,23); savePlayer();}
+    if(ME){ME.pos=Math.min(ME.pos+1,24); savePlayer();}
     document.getElementById("qprog").style.width=(monthScore/3*100)+"%";
     setTimeout(function(){refresh();updateBadge();},300);
-    if(ME&&ME.pos===23)setTimeout(function(){notify("👑 "+ME.name+" atteint The Wall !");},600);
+    if(ME&&ME.pos===24)setTimeout(function(){notify("👑 "+ME.name+" atteint The Wall !");},600);
     fb.className="pfb show good";
     fb.innerHTML="⚔ "+q.r+(isLast?" — Quete du mois terminee !":"")+"<br>"+nextBtn;
   } else {
@@ -654,9 +686,9 @@ function buildLB(){
       var isMe=ME&&p.id===ME.id;
       return '<div class="lbrow'+(isMe?" lbme":"")+'"><div class="lbrank '+(i<3?"top":"")+'">'+( medals[i]||i+1)+'</div>'
         +'<div class="lbav">'+p.avatar+'</div><div class="lbinfo">'
-        +'<div style="display:flex;justify-content:space-between"><span class="lbname">'+p.name+(isMe?' ★':'')+'</span><span class="lbsc">Case '+(p.pos+1)+'/24</span></div>'
+        +'<div style="display:flex;justify-content:space-between"><span class="lbname">'+p.name+(isMe?' ★':'')+'</span><span class="lbsc">'+(p.pos===0?'Départ':'Case '+p.pos+'/24')+'</span></div>'
         +'<div class="lbdet">'+WP[p.pos].n+'</div>'
-        +'<div class="lbbar"><div class="lbfill" style="width:'+Math.round(p.pos/23*100)+'%;background:'+p.brd+'"></div></div>'
+        +'<div class="lbbar"><div class="lbfill" style="width:'+Math.round(p.pos/24*100)+'%;background:'+p.brd+'"></div></div>'
         +'</div></div>';
     }).join("");
 }
@@ -677,7 +709,7 @@ function checkAdmin(){
 function populateAdminSel(){
   var opts='<option value="">-- Joueur --</option>';
   PLAYERS.slice().sort(function(a,b){return b.pos-a.pos;}).forEach(function(p){
-    opts+='<option value="'+p.id+'">'+p.avatar+" "+p.name+" (Case "+(p.pos+1)+")</option>";
+    opts+='<option value="'+p.id+'">'+p.avatar+" "+p.name+" ("+(p.pos===0?"Départ":"Case "+p.pos)+")</option>";
   });
   document.getElementById("adminSel").innerHTML=opts;
   document.getElementById("adminSelDel").innerHTML=opts;
@@ -768,7 +800,7 @@ async function adminAdvance(){
   if(!pid){document.getElementById("adminMsg3").textContent="Choisissez un joueur.";return;}
   var player=PLAYERS.find(function(p){return p.id===pid;});
   if(!player)return;
-  var newPos=Math.min(player.pos+pts,23);
+  var newPos=Math.min(player.pos+pts,24);
   try{
     await updateDoc(doc(db,'players',pid),{pos:newPos});
     document.getElementById("adminMsg3").textContent=player.name+" avance de "+pts+" case(s).";
@@ -789,7 +821,7 @@ async function resetSeason(){
 }
 function updateBadge(){
   if(!ME)return;
-  document.getElementById("myBadge").innerHTML='<div class="pbadge-av">'+ME.avatar+'</div><div><div class="pbadge-name">'+ME.name+'</div><div class="pbadge-pos">Case '+(ME.pos+1)+'/24</div></div>';
+  document.getElementById("myBadge").innerHTML='<div class="pbadge-av">'+ME.avatar+'</div><div><div class="pbadge-name">'+ME.name+'</div><div class="pbadge-pos">'+(ME.pos===0?'Départ':'Case '+ME.pos+'/24')+'</div></div>';
 }
 
 function notify(msg){var n=document.getElementById("notif");n.textContent=msg;n.classList.add("show");setTimeout(function(){n.classList.remove("show");},3500);}
@@ -841,7 +873,7 @@ window.removeDraftQ=removeDraftQ; window.refreshQPreview=refreshQPreview;
 window.publishQuest=publishQuest; window.setActiveMonth=setActiveMonth;
 window.adminAdvance=adminAdvance; window.deletePlayer=deletePlayer; window.resetSeason=resetSeason;
 window.populateStepSel=populateStepSel;
-window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP;
+window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window.showPlayersAt=showPlayersAt;
 </script>
 </body>
 </html>
