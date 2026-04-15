@@ -8,9 +8,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:#04090f;font-family:'Crimson Pro',serif}
-.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:100;background:#04090f}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:100;background:transparent}
 .screen.active{display:flex}
-#sRules{background:radial-gradient(ellipse at center,#0d1a08 0%,#04090f 100%)}
+#sRules{}
 .box{border:1px solid #6a4e14;background:rgba(12,8,4,.97);max-width:560px;width:94%;max-height:88vh;overflow-y:auto}
 .bhead{background:#140e06;padding:18px 24px;border-bottom:1px solid #3a2808;text-align:center}
 .btitle{font-family:'Cinzel Decorative',serif;font-size:20px;color:#c9a84c;letter-spacing:3px}
@@ -21,7 +21,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04090f;font-family:
 .ri{font-size:26px;flex-shrink:0;width:36px;text-align:center}
 .rt h3{font-family:'Cinzel',serif;font-size:12px;color:#c9a84c;letter-spacing:1px;margin-bottom:4px}
 .rt p{font-size:13px;color:#c8aa6e;line-height:1.6}
-#sAvatar{background:radial-gradient(ellipse at center,#0d1a08 0%,#04090f 100%)}
+#sAvatar{}
 .av-label{font-family:'Cinzel',serif;font-size:9px;color:#6a4e14;letter-spacing:2px;margin-bottom:6px}
 .av-input{width:100%;background:rgba(255,255,255,.05);border:1px solid #3a2808;color:#f0ddb0;padding:10px 12px;font-family:'Cinzel',serif;font-size:13px;outline:none;letter-spacing:1px}
 .av-input:focus{border-color:#c9a84c}
@@ -31,7 +31,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#04090f;font-family:
 .av-opt:hover{border-color:#7a5c1e;background:rgba(201,168,76,.08)}
 .av-opt.sel{border-color:#c9a84c;background:rgba(201,168,76,.18);transform:scale(1.1)}
 #sGame{position:fixed;inset:0}
-#scene{position:fixed;top:50px;left:0;right:0;bottom:64px;overflow:hidden;cursor:grab;background:#04090f}
+#scene{position:fixed;top:50px;left:0;right:0;bottom:64px;overflow:hidden;cursor:grab;background:transparent}
 #scene:active{cursor:grabbing}
 #worldSvg{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
 #top{position:fixed;top:0;left:0;right:0;height:50px;background:rgba(3,6,12,.97);border-bottom:1px solid #6a4e14;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:50}
@@ -93,7 +93,7 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .lbbar{height:3px;background:rgba(255,255,255,.06);margin-top:4px}
 .lbfill{height:100%;transition:width .8s}.lbsc{font-family:'Cinzel',serif;font-size:11px;color:#c9a84c}
 .lbme{background:rgba(201,168,76,.05) !important}
-#sAdminLogin{background:radial-gradient(ellipse at center,#0d0a04 0%,#04090f 100%)}
+#sAdminLogin{}
 #sAdmin{overflow-y:auto;align-items:flex-start;justify-content:flex-start;padding-top:0;padding-bottom:40px}
 .admin-wrap{max-width:540px;width:94%;margin:0 auto}
 #notif{position:fixed;top:58px;left:50%;transform:translateX(-50%) translateY(-14px);background:#0c0804;border:1px solid #c9a84c;padding:8px 22px;font-family:'Cinzel',serif;font-size:11px;color:#c9a84c;letter-spacing:1px;z-index:80;opacity:0;transition:all .4s;pointer-events:none;white-space:nowrap}
@@ -102,9 +102,27 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .btn-main:hover{background:rgba(201,168,76,.25)}
 .btn-sec{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:10px 24px;border:1px solid #6a4e14;background:transparent;color:#8a6a38;cursor:pointer;transition:all .3s}
 .btn-sec:hover{border-color:#c9a84c;color:#c9a84c}
+/* ── BACKGROUND FX ── */
+#bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
+#vignette{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 35%,rgba(1,3,8,.92) 100%)}
+.fog-l{position:fixed;inset:0;pointer-events:none;z-index:3}
+#fog1{background:radial-gradient(ellipse 200% 45% at -15% 58%,rgba(5,12,28,.6) 0%,transparent 52%);animation:fd1 34s ease-in-out infinite alternate}
+#fog2{background:radial-gradient(ellipse 170% 40% at 115% 42%,rgba(4,9,22,.5) 0%,transparent 48%);animation:fd2 50s ease-in-out infinite alternate}
+#fog3{background:radial-gradient(ellipse 140% 30% at 50% 88%,rgba(2,6,16,.65) 0%,transparent 42%);animation:fd3 42s ease-in-out infinite alternate}
+#fog4{background:radial-gradient(ellipse 110% 20% at 30% 12%,rgba(6,10,24,.4) 0%,transparent 40%);animation:fd4 60s ease-in-out infinite alternate}
+@keyframes fd1{0%{transform:translateX(-9%) scaleX(.9);opacity:.55}100%{transform:translateX(9%) scaleX(1.1);opacity:1}}
+@keyframes fd2{0%{transform:translateX(11%) scaleX(1.12);opacity:.65}100%{transform:translateX(-11%) scaleX(.88);opacity:1}}
+@keyframes fd3{0%{transform:translateY(-6%) scaleY(.85);opacity:.45}100%{transform:translateY(6%) scaleY(1.15);opacity:.9}}
+@keyframes fd4{0%{transform:translateX(-7%) scaleX(.93);opacity:.4}100%{transform:translateX(7%) scaleX(1.07);opacity:.85}}
 </style>
 </head>
 <body>
+<canvas id="bgCanvas"></canvas>
+<div id="fog1" class="fog-l"></div>
+<div id="fog2" class="fog-l"></div>
+<div id="fog3" class="fog-l"></div>
+<div id="fog4" class="fog-l"></div>
+<div id="vignette"></div>
 
 <!-- RÈGLES -->
 <div class="screen active" id="sRules">
@@ -874,6 +892,123 @@ window.publishQuest=publishQuest; window.setActiveMonth=setActiveMonth;
 window.adminAdvance=adminAdvance; window.deletePlayer=deletePlayer; window.resetSeason=resetSeason;
 window.populateStepSel=populateStepSel;
 window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window.showPlayersAt=showPlayersAt;
+
+// ── BACKGROUND PARTICLE SYSTEM ──
+(function(){
+  var C=document.getElementById('bgCanvas');
+  var ctx=C.getContext('2d');
+  var W,H,mob=window.innerWidth<768;
+  function resize(){W=C.width=window.innerWidth;H=C.height=window.innerHeight;}
+  window.addEventListener('resize',resize);
+  resize();
+
+  // --- STARS ---
+  var STARS=mob?50:95, stars=[];
+  for(var i=0;i<STARS;i++){
+    stars.push({
+      x:Math.random()*W, y:Math.random()*H*.78,
+      r:Math.random()*.85+.12,
+      ba:Math.random()*.22+.035,
+      t:Math.random()*100,
+      ts:Math.random()*.011+.002
+    });
+  }
+
+  // --- ASH / SNOW PARTICLES ---
+  var SNOW=mob?95:175, snow=[];
+  for(var i=0;i<SNOW;i++){
+    var isAsh=Math.random()<.42;
+    snow.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.55+.22,
+      vy:Math.random()*.52+.1,
+      vx:(Math.random()-.5)*.32,
+      a:Math.random()*.28+.04,
+      t:Math.random()*100,
+      ts:Math.random()*.016+.004,
+      rgb:isAsh?'148,138,128':'225,218,208'
+    });
+  }
+
+  // --- EMBERS ---
+  var EMBERS=mob?20:42, embers=[];
+  function mkE(init){
+    var h=Math.floor(Math.random()*40+3);
+    var l=Math.floor(Math.random()*16+56);
+    var ml=Math.floor(Math.random()*150+75);
+    return {
+      x:Math.random()*W,
+      y:init?Math.random()*H:H+6,
+      r:Math.random()*1.7+.45,
+      vy:Math.random()*1.05+.22,
+      vx:(Math.random()-.5)*.65,
+      a:0, ma:Math.random()*.72+.14,
+      t:Math.random()*100, ts:Math.random()*.032+.007,
+      life:init?Math.floor(Math.random()*ml):0,
+      ml:ml,
+      hsl:'hsl('+h+',100%,'+l+'%)'
+    };
+  }
+  for(var i=0;i<EMBERS;i++) embers.push(mkE(true));
+
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+
+    // Stars
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      s.t+=s.ts;
+      var a=s.ba+Math.sin(s.t)*s.ba*.55;
+      if(a<0)a=0;
+      ctx.globalAlpha=a;
+      ctx.fillStyle='#c8c2b8';
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill();
+    }
+
+    // Ash/snow
+    ctx.shadowBlur=0;
+    for(var i=0;i<snow.length;i++){
+      var p=snow[i];
+      p.t+=p.ts;
+      p.x+=p.vx+Math.sin(p.t)*.2;
+      p.y+=p.vy;
+      if(p.y>H+4){p.x=Math.random()*W;p.y=-4;}
+      if(p.x<-4)p.x=W+4; else if(p.x>W+4)p.x=-4;
+      ctx.globalAlpha=p.a;
+      ctx.fillStyle='rgba('+p.rgb+','+p.a+')';
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill();
+    }
+
+    // Embers (glow via shadowBlur)
+    for(var i=0;i<embers.length;i++){
+      var e=embers[i];
+      e.t+=e.ts;
+      e.x+=e.vx+Math.sin(e.t)*.36;
+      e.y-=e.vy;
+      e.life++;
+      var fi=14,fo=24;
+      if(e.life<fi) e.a=(e.life/fi)*e.ma;
+      else if(e.life>e.ml-fo) e.a=Math.max(0,((e.ml-e.life)/fo)*e.ma);
+      else e.a=e.ma;
+      if(e.life>e.ml||e.y<-10){embers[i]=mkE(false);continue;}
+      ctx.save();
+      ctx.globalAlpha=e.a*.82;
+      ctx.shadowBlur=16;ctx.shadowColor=e.hsl;
+      ctx.fillStyle=e.hsl;
+      ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,6.283);ctx.fill();
+      // bright hot core
+      ctx.globalAlpha=e.a;
+      ctx.shadowBlur=0;
+      ctx.fillStyle='#fff8e0';
+      ctx.beginPath();ctx.arc(e.x,e.y,e.r*.36,0,6.283);ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.globalAlpha=1;ctx.shadowBlur=0;
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
 </script>
 </body>
 </html>
