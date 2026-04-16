@@ -469,7 +469,7 @@ function renderWP() {
     var done = ME && ME.pos > i;
     var isEnd = i===24;
     var isStart = i===0;
-    var r = isEnd?16 : isStart?11 : wp.cross?13 : 9;
+    var r = isEnd?16 : isStart?11 : wp.cross?14 : 12;
     var grp = svgEl("g");
     grp.setAttribute("transform","translate("+wp.x+","+wp.y+")");
     grp.style.cursor = "pointer";
