@@ -1009,7 +1009,7 @@ function sfxAdvance(){playFx('correct');}
 
   // --- DRAGON (chroma key green screen removal) ---
   var drgVid=document.createElement('video');
-  drgVid.src='%5B4K%5D%20Flying%20Dragon%20-%20Green%20Screen.mp4';
+  drgVid.src='video-project-22_v9wShYZD.mp4';
   drgVid.loop=true; drgVid.muted=true; drgVid.playsInline=true;
   drgVid.style.display='none';
   document.body.appendChild(drgVid);
@@ -1093,10 +1093,11 @@ function sfxAdvance(){playFx('correct');}
     // Dragon chroma key
     if(drgVid.readyState>=2&&drgVid.videoWidth>0){
       var vw=drgVid.videoWidth, vh=drgVid.videoHeight;
+      var cropH=Math.floor(vh*0.88); // crop bottom 12% (watermark zone)
       var s=Math.min(DRG_MAX/vw,1);
-      var dw=Math.floor(vw*s), dh=Math.floor(vh*s);
+      var dw=Math.floor(vw*s), dh=Math.floor(cropH*s);
       if(drgOff.width!==dw){drgOff.width=dw;drgOff.height=dh;}
-      drgCtx.drawImage(drgVid,0,0,dw,dh);
+      drgCtx.drawImage(drgVid,0,0,vw,cropH,0,0,dw,dh); // source crop
       var img=drgCtx.getImageData(0,0,dw,dh), d=img.data;
       for(var j=0;j<d.length;j+=4){
         var r=d[j],g=d[j+1],b=d[j+2];
