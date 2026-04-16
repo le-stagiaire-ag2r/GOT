@@ -107,10 +107,11 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 #bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
 #vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(1,3,8,.58) 100%)}
 .fog-l{position:fixed;inset:0;pointer-events:none;z-index:5}
-#fog1{background:radial-gradient(ellipse 220% 55% at -10% 55%,rgba(110,135,175,.28) 0%,transparent 52%);animation:fd1 34s ease-in-out infinite alternate}
-#fog2{background:radial-gradient(ellipse 190% 50% at 110% 40%,rgba(95,120,162,.24) 0%,transparent 50%);animation:fd2 50s ease-in-out infinite alternate}
-#fog3{background:radial-gradient(ellipse 160% 40% at 50% 92%,rgba(120,145,185,.3) 0%,transparent 46%);animation:fd3 42s ease-in-out infinite alternate}
-#fog4{background:radial-gradient(ellipse 130% 30% at 28% 8%,rgba(100,128,168,.26) 0%,transparent 44%);animation:fd4 60s ease-in-out infinite alternate}
+#fog1{background:radial-gradient(ellipse 300% 70% at -20% 55%,rgba(110,135,175,.32) 0%,rgba(110,135,175,.18) 28%,rgba(110,135,175,.06) 55%,rgba(110,135,175,.01) 75%,transparent 90%);animation:fd1 34s ease-in-out infinite alternate}
+#fog2{background:radial-gradient(ellipse 280% 65% at 120% 40%,rgba(95,120,162,.28) 0%,rgba(95,120,162,.15) 25%,rgba(95,120,162,.05) 52%,rgba(95,120,162,.01) 72%,transparent 88%);animation:fd2 50s ease-in-out infinite alternate}
+#fog3{background:radial-gradient(ellipse 220% 55% at 50% 108%,rgba(120,145,185,.35) 0%,rgba(120,145,185,.2) 22%,rgba(120,145,185,.07) 48%,rgba(120,145,185,.01) 68%,transparent 84%);animation:fd3 42s ease-in-out infinite alternate}
+#fog4{background:radial-gradient(ellipse 200% 45% at 28% -12%,rgba(100,128,168,.3) 0%,rgba(100,128,168,.16) 26%,rgba(100,128,168,.05) 52%,rgba(100,128,168,.01) 70%,transparent 86%);animation:fd4 60s ease-in-out infinite alternate}
+#fog5{background:radial-gradient(ellipse 180% 40% at 75% 50%,rgba(90,115,158,.18) 0%,rgba(90,115,158,.08) 30%,rgba(90,115,158,.02) 58%,transparent 80%);animation:fd1 44s ease-in-out infinite alternate-reverse}
 @keyframes fd1{0%{transform:translateX(-9%) scaleX(.9);opacity:.6}100%{transform:translateX(9%) scaleX(1.1);opacity:1}}
 @keyframes fd2{0%{transform:translateX(11%) scaleX(1.12);opacity:.7}100%{transform:translateX(-11%) scaleX(.88);opacity:1}}
 @keyframes fd3{0%{transform:translateY(-6%) scaleY(.85);opacity:.55}100%{transform:translateY(6%) scaleY(1.15);opacity:1}}
@@ -123,6 +124,7 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 <div id="fog2" class="fog-l"></div>
 <div id="fog3" class="fog-l"></div>
 <div id="fog4" class="fog-l"></div>
+<div id="fog5" class="fog-l"></div>
 <div id="vignette"></div>
 
 <!-- RÈGLES -->
@@ -469,43 +471,52 @@ function renderWP() {
     var done = ME && ME.pos > i;
     var isEnd = i===24;
     var isStart = i===0;
-    var r = isEnd?16 : isStart?11 : wp.cross?13 : 9;
+    var r = isEnd?16 : isStart?11 : wp.cross?14 : 12;
     var grp = svgEl("g");
     grp.setAttribute("transform","translate("+wp.x+","+wp.y+")");
     grp.style.cursor = "pointer";
     grp.addEventListener("click",function(){ clickWP(i); });
 
-    if(isEnd){
+    if(here||isEnd){
       var pu=svgEl("circle"); pu.setAttribute("r",r+8); pu.setAttribute("fill","none");
-      pu.setAttribute("stroke","#f0d060");
+      pu.setAttribute("stroke",isEnd?"#f0d060":"#c8922a");
       pu.setAttribute("stroke-width","1"); pu.setAttribute("opacity","0.4");
       grp.appendChild(pu);
     }
-    var c=svgEl("circle"); c.setAttribute("r",r);
-    c.setAttribute("fill",isEnd?"#2a1400":isStart?"rgba(20,80,20,.7)":wp.cross?"rgba(180,40,40,.35)":"rgba(5,3,1,.85)");
-    c.setAttribute("stroke",isEnd?"#f0d060":isStart?"#60c860":wp.cross?"#e06060":"#4a3010");
-    c.setAttribute("stroke-width",isEnd||isStart?"2.5":wp.cross?"2":"1");
-    grp.appendChild(c);
 
-    if(here&&!isEnd&&!isStart){
-      var cs=r+3;
-      var ln1=svgEl("line");
-      ln1.setAttribute("x1",-cs);ln1.setAttribute("y1",-cs);
-      ln1.setAttribute("x2",cs);ln1.setAttribute("y2",cs);
-      ln1.setAttribute("stroke","#e02020");ln1.setAttribute("stroke-width","2.5");ln1.setAttribute("stroke-linecap","round");
-      var ln2=svgEl("line");
-      ln2.setAttribute("x1",cs);ln2.setAttribute("y1",-cs);
-      ln2.setAttribute("x2",-cs);ln2.setAttribute("y2",cs);
-      ln2.setAttribute("stroke","#e02020");ln2.setAttribute("stroke-width","2.5");ln2.setAttribute("stroke-linecap","round");
-      grp.appendChild(ln1);grp.appendChild(ln2);
+    if(wp.cross&&!isEnd&&!isStart){
+      // Croix SVG à la place du rond rouge
+      var arm=r-2;
+      var bar=2.5;
+      var cv=svgEl("rect"); cv.setAttribute("x",-bar); cv.setAttribute("y",-arm);
+      cv.setAttribute("width",bar*2); cv.setAttribute("height",arm*2);
+      cv.setAttribute("fill","#c03030"); cv.setAttribute("rx","1");
+      var ch=svgEl("rect"); ch.setAttribute("x",-arm); ch.setAttribute("y",-bar);
+      ch.setAttribute("width",arm*2); ch.setAttribute("height",bar*2);
+      ch.setAttribute("fill","#c03030"); ch.setAttribute("rx","1");
+      // Bordure/outline
+      var cv2=svgEl("rect"); cv2.setAttribute("x",-(bar+1)); cv2.setAttribute("y",-(arm+1));
+      cv2.setAttribute("width",(bar+1)*2); cv2.setAttribute("height",(arm+1)*2);
+      cv2.setAttribute("fill","none"); cv2.setAttribute("stroke","#1a0808"); cv2.setAttribute("stroke-width","0.8"); cv2.setAttribute("rx","1.5");
+      var ch2=svgEl("rect"); ch2.setAttribute("x",-(arm+1)); ch2.setAttribute("y",-(bar+1));
+      ch2.setAttribute("width",(arm+1)*2); ch2.setAttribute("height",(bar+1)*2);
+      ch2.setAttribute("fill","none"); ch2.setAttribute("stroke","#1a0808"); ch2.setAttribute("stroke-width","0.8"); ch2.setAttribute("rx","1.5");
+      grp.appendChild(cv2); grp.appendChild(ch2);
+      grp.appendChild(cv); grp.appendChild(ch);
+    } else {
+      var c=svgEl("circle"); c.setAttribute("r",r);
+      c.setAttribute("fill",isEnd?"#2a1400":isStart?"rgba(20,80,20,.7)":"rgba(5,3,1,.85)");
+      c.setAttribute("stroke",isEnd?"#f0d060":isStart?"#60c860":"#4a3010");
+      c.setAttribute("stroke-width",isEnd||isStart?"2.5":"1");
+      grp.appendChild(c);
+
+      var ic=svgEl("text"); ic.setAttribute("text-anchor","middle"); ic.setAttribute("dominant-baseline","central");
+      ic.setAttribute("font-size",isEnd?"14":isStart?"10":"8");
+      ic.setAttribute("fill",isEnd?"#f0d060":isStart?"#90f090":"#c8922a");
+      ic.setAttribute("font-family","Cinzel,serif");
+      ic.textContent = isEnd?"👑":isStart?"▶":i;
+      grp.appendChild(ic);
     }
-
-    var ic=svgEl("text"); ic.setAttribute("text-anchor","middle"); ic.setAttribute("dominant-baseline","central");
-    ic.setAttribute("font-size",isEnd?"14":isStart?"10":wp.cross?"11":"8");
-    ic.setAttribute("fill",isEnd?"#f0d060":isStart?"#90f090":wp.cross?"#f0a080":"#c8922a");
-    ic.setAttribute("font-family","Cinzel,serif");
-    ic.textContent = isEnd?"👑":isStart?"▶":wp.cross?"X":i;
-    grp.appendChild(ic);
 
     var lbTxt = wp.n.replace(/ [0-9]+\/[0-9]+$/,"");
     var lbBg=svgEl("rect");
