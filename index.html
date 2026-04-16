@@ -551,27 +551,46 @@ function renderPP() {
     var hasMe=ME&&group.some(function(p){return p.id===ME.id;});
     var single=group.length===1;
     var grp=svgEl("g");
-    grp.setAttribute("transform","translate("+(wp.x+20)+","+(wp.y-20)+")");
+    grp.setAttribute("transform","translate("+(wp.x+18)+","+(wp.y-22)+")");
     grp.style.cursor="pointer";
     grp.addEventListener("click",function(){showPlayersAt(pos,group);});
-    if(hasMe){
-      var gl=svgEl("circle"); gl.setAttribute("r","17"); gl.setAttribute("fill","none");
-      gl.setAttribute("stroke","#f0d080"); gl.setAttribute("stroke-width","2"); gl.setAttribute("opacity","0.85");
-      grp.appendChild(gl);
-    }
-    var bg=svgEl("circle"); bg.setAttribute("r","13");
-    bg.setAttribute("fill",hasMe?"rgba(201,168,76,0.88)":"rgba(20,12,4,0.92)");
-    bg.setAttribute("stroke",hasMe?"#f0d080":"#6a4e14"); bg.setAttribute("stroke-width","1.5");
-    grp.appendChild(bg);
-    var txt=svgEl("text"); txt.setAttribute("text-anchor","middle"); txt.setAttribute("dominant-baseline","central");
-    txt.setAttribute("font-family","Cinzel,serif"); txt.setAttribute("font-weight","bold");
+
     if(single){
-      txt.setAttribute("font-size","11"); txt.textContent=group[0].avatar;
+      // Avatar flottant — ombre portée (texte dupliqué décalé) + texte principal
+      var sh=svgEl("text"); sh.setAttribute("text-anchor","middle"); sh.setAttribute("dominant-baseline","central");
+      sh.setAttribute("font-size","17"); sh.setAttribute("fill","rgba(0,0,0,0.7)");
+      sh.setAttribute("x","1"); sh.setAttribute("y","1");
+      sh.textContent=group[0].avatar;
+      grp.appendChild(sh);
+      var av=svgEl("text"); av.setAttribute("text-anchor","middle"); av.setAttribute("dominant-baseline","central");
+      av.setAttribute("font-size","17");
+      av.textContent=group[0].avatar;
+      grp.appendChild(av);
     } else {
-      txt.setAttribute("font-size","10"); txt.setAttribute("fill",hasMe?"#3a2000":"#c9a84c");
-      txt.textContent=group.length;
+      // Plusieurs joueurs — "×N" avec contour sombre pour lisibilité
+      var label="×"+group.length;
+      var outline=svgEl("text"); outline.setAttribute("text-anchor","middle"); outline.setAttribute("dominant-baseline","central");
+      outline.setAttribute("font-family","Cinzel,serif"); outline.setAttribute("font-weight","700");
+      outline.setAttribute("font-size","13"); outline.setAttribute("fill","none");
+      outline.setAttribute("stroke","rgba(0,0,0,0.85)"); outline.setAttribute("stroke-width","3");
+      outline.setAttribute("stroke-linejoin","round");
+      outline.textContent=label;
+      grp.appendChild(outline);
+      var count=svgEl("text"); count.setAttribute("text-anchor","middle"); count.setAttribute("dominant-baseline","central");
+      count.setAttribute("font-family","Cinzel,serif"); count.setAttribute("font-weight","700");
+      count.setAttribute("font-size","13");
+      count.setAttribute("fill",hasMe?"#f0d080":"#ffffff");
+      count.textContent=label;
+      grp.appendChild(count);
     }
-    grp.appendChild(txt);
+
+    // Petit indicateur "c'est moi" — point doré sous l'avatar
+    if(hasMe){
+      var dot=svgEl("circle"); dot.setAttribute("cx","0"); dot.setAttribute("cy","12");
+      dot.setAttribute("r","2.5"); dot.setAttribute("fill","#f0d080");
+      grp.appendChild(dot);
+    }
+
     g.appendChild(grp);
   });
 }
