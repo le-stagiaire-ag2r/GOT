@@ -1007,25 +1007,21 @@ function sfxAdvance(){playFx('correct');}
   window.addEventListener('resize',resize);
   resize();
 
-  // --- DRAGON (chroma key green screen removal) ---
-  var DRG_SRCS=['video-project-22_v9wShYZD.mp4','%5B4K%5D%20Flying%20Dragon%20-%20Green%20Screen.mp4'];
-  var drgIdx=0;
-  var drgVid=document.createElement('video');
-  drgVid.muted=true; drgVid.playsInline=true; drgVid.style.display='none';
-  document.body.appendChild(drgVid);
-  function loadDrg(i){
-    drgVid.src=DRG_SRCS[i];
-    drgVid.load();
-    drgVid.play().catch(function(){});
-  }
-  drgVid.addEventListener('ended',function(){
-    drgIdx=(drgIdx+1)%DRG_SRCS.length;
-    loadDrg(drgIdx);
+  // --- DRAGONS (3 vidéos simultanées, chroma key) ---
+  var DRG_MAX=mob?260:380;
+  var DRAGONS=[
+    {src:'video-project-22_v9wShYZD.mp4',         xFrac:0.02, yFrac:0.10, wFrac:0.46},
+    {src:'video-project-1_RftImy5y.mp4',           xFrac:0.52, yFrac:0.03, wFrac:0.36},
+    {src:'%5B4K%5D%20Flying%20Dragon%20-%20Green%20Screen.mp4', xFrac:0.55, yFrac:0.55, wFrac:0.28}
+  ];
+  DRAGONS.forEach(function(drg){
+    var v=document.createElement('video');
+    v.src=drg.src; v.loop=true; v.muted=true; v.playsInline=true; v.style.display='none';
+    document.body.appendChild(v); v.play().catch(function(){});
+    drg.vid=v;
+    drg.off=document.createElement('canvas');
+    drg.octx=drg.off.getContext('2d');
   });
-  loadDrg(0);
-  var drgOff=document.createElement('canvas');
-  var drgCtx=drgOff.getContext('2d');
-  var DRG_MAX=640; // max processing width for perf
 
   // --- FOG PATCHES (canvas radial, no hard edges) ---
   var FOG_N=mob?8:14, fogP=[];
@@ -1099,39 +1095,31 @@ function sfxAdvance(){playFx('correct');}
   function tick(){
     ctx.clearRect(0,0,W,H);
 
-    // Dragon chroma key
-    if(drgVid.readyState>=2&&drgVid.videoWidth>0){
-      var vw=drgVid.videoWidth, vh=drgVid.videoHeight;
-      var cropH=Math.floor(vh*0.88); // crop bottom 12% (watermark zone)
+    // Dragons x3 chroma key
+    DRAGONS.forEach(function(drg){
+      var v=drg.vid;
+      if(v.readyState<2||!v.videoWidth)return;
+      var vw=v.videoWidth, vh=v.videoHeight;
+      var cropH=Math.floor(vh*0.88);
       var s=Math.min(DRG_MAX/vw,1);
       var dw=Math.floor(vw*s), dh=Math.floor(cropH*s);
-      if(drgOff.width!==dw){drgOff.width=dw;drgOff.height=dh;}
-      drgCtx.drawImage(drgVid,0,0,vw,cropH,0,0,dw,dh); // source crop
-      var img=drgCtx.getImageData(0,0,dw,dh), d=img.data;
+      if(drg.off.width!==dw){drg.off.width=dw;drg.off.height=dh;}
+      drg.octx.drawImage(v,0,0,vw,cropH,0,0,dw,dh);
+      var img=drg.octx.getImageData(0,0,dw,dh), d=img.data;
       for(var j=0;j<d.length;j+=4){
         var r=d[j],g=d[j+1],b=d[j+2];
-        var maxRB=Math.max(r,b);
-        var greenness=g-maxRB; // how much greener than any other channel
-        if(greenness>15){
-          if(greenness>55){
-            // Pixel franchement vert → transparent total
-            d[j+3]=0;
-          } else {
-            // Pixel de bordure → transparence progressive
-            d[j+3]=Math.floor((1-(greenness-15)/40)*d[j+3]);
-          }
-          // Spill suppression : atténue le canal vert résiduel
-          d[j+1]=Math.min(d[j+1], maxRB);
+        var maxRB=Math.max(r,b), gn=g-maxRB;
+        if(gn>15){
+          d[j+3]=gn>55?0:Math.floor((1-(gn-15)/40)*d[j+3]);
+          d[j+1]=Math.min(g,maxRB);
         }
       }
-      drgCtx.putImageData(img,0,0);
-      // Centre le dragon, taille naturelle sur l'écran
-      var ds=Math.min(W/dw,H/dh)*0.85;
-      var dx=(W-dw*ds)/2, dy=(H-dh*ds)/2;
+      drg.octx.putImageData(img,0,0);
+      var fw=drg.wFrac*W, fh=fw*(dh/dw);
       ctx.globalAlpha=0.82;
-      ctx.drawImage(drgOff,dx,dy,dw*ds,dh*ds);
+      ctx.drawImage(drg.off, drg.xFrac*W, drg.yFrac*H, fw, fh);
       ctx.globalAlpha=1;
-    }
+    });
 
     // Fog patches — radial gradients centered within canvas, soft on all sides
     ctx.shadowBlur=0;
