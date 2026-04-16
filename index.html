@@ -1100,7 +1100,19 @@ function sfxAdvance(){playFx('correct');}
       var img=drgCtx.getImageData(0,0,dw,dh), d=img.data;
       for(var j=0;j<d.length;j+=4){
         var r=d[j],g=d[j+1],b=d[j+2];
-        if(g>90&&g>r*1.35&&g>b*1.2){d[j+3]=0;}
+        var maxRB=Math.max(r,b);
+        var greenness=g-maxRB; // how much greener than any other channel
+        if(greenness>15){
+          if(greenness>55){
+            // Pixel franchement vert → transparent total
+            d[j+3]=0;
+          } else {
+            // Pixel de bordure → transparence progressive
+            d[j+3]=Math.floor((1-(greenness-15)/40)*d[j+3]);
+          }
+          // Spill suppression : atténue le canal vert résiduel
+          d[j+1]=Math.min(d[j+1], maxRB);
+        }
       }
       drgCtx.putImageData(img,0,0);
       // Centre le dragon, taille naturelle sur l'écran
