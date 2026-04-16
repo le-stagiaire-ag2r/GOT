@@ -1106,32 +1106,23 @@ function sfxAdvance(){playFx('correct');}
       if(drg.off.width!==dw){drg.off.width=dw;drg.off.height=dh;}
       drg.octx.drawImage(v,0,0,vw,cropH,0,0,dw,dh);
       var img=drg.octx.getImageData(0,0,dw,dh), d=img.data;
+      var ef=0.25; // zone de fondu : 25% de chaque bord
+      var exW=dw*ef, eyH=dh*ef;
       for(var j=0;j<d.length;j+=4){
+        var px=(j/4)%dw, py=Math.floor((j/4)/dw);
+        // Facteur de fondu bord (0 au bord, 1 au centre)
+        var fx=Math.min(px,dw-1-px)/exW;
+        var fy=Math.min(py,dh-1-py)/eyH;
+        var edge=Math.min(1,Math.min(fx,fy));
+        // Chroma key
         var r=d[j],g=d[j+1],b=d[j+2];
         var maxRB=Math.max(r,b), gn=g-maxRB;
-        if(gn>15){
-          d[j+3]=gn>55?0:Math.floor((1-(gn-15)/40)*d[j+3]);
-          d[j+1]=Math.min(g,maxRB);
-        }
+        var alpha=255;
+        if(gn>15) alpha=gn>55?0:Math.floor((1-(gn-15)/40)*255);
+        d[j+3]=Math.floor(alpha*edge);
+        if(gn>15) d[j+1]=Math.min(g,maxRB);
       }
       drg.octx.putImageData(img,0,0);
-      // Fondu des 4 bords pour supprimer le rectangle visible
-      var ef=0.25; // 25% de fondu sur chaque bord
-      drg.octx.save();
-      drg.octx.globalCompositeOperation='destination-in';
-      var gL=drg.octx.createLinearGradient(0,0,dw*ef,0);
-      gL.addColorStop(0,'rgba(0,0,0,0)');gL.addColorStop(1,'rgba(0,0,0,1)');
-      drg.octx.fillStyle=gL;drg.octx.fillRect(0,0,dw*ef,dh);
-      var gR=drg.octx.createLinearGradient(dw,0,dw*(1-ef),0);
-      gR.addColorStop(0,'rgba(0,0,0,0)');gR.addColorStop(1,'rgba(0,0,0,1)');
-      drg.octx.fillStyle=gR;drg.octx.fillRect(dw*(1-ef),0,dw*ef,dh);
-      var gT=drg.octx.createLinearGradient(0,0,0,dh*ef);
-      gT.addColorStop(0,'rgba(0,0,0,0)');gT.addColorStop(1,'rgba(0,0,0,1)');
-      drg.octx.fillStyle=gT;drg.octx.fillRect(0,0,dw,dh*ef);
-      var gB=drg.octx.createLinearGradient(0,dh,0,dh*(1-ef));
-      gB.addColorStop(0,'rgba(0,0,0,0)');gB.addColorStop(1,'rgba(0,0,0,1)');
-      drg.octx.fillStyle=gB;drg.octx.fillRect(0,dh*(1-ef),dw,dh*ef);
-      drg.octx.restore();
       var fw=drg.wFrac*W, fh=fw*(dh/dw);
       ctx.globalAlpha=0.82;
       ctx.drawImage(drg.off, drg.xFrac*W, drg.yFrac*H, fw, fh);
