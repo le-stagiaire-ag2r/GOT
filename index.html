@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:ital,wght@0,400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#04090f;font-family:'Crimson Pro',serif}
+html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:'Crimson Pro',serif}
 .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:100;background:transparent}
 .screen.active{display:flex}
 #sRules{}
@@ -1007,16 +1007,27 @@ function sfxAdvance(){playFx('correct');}
   window.addEventListener('resize',resize);
   resize();
 
+  // --- DRAGON (chroma key green screen removal) ---
+  var drgVid=document.createElement('video');
+  drgVid.src='%5B4K%5D%20Flying%20Dragon%20-%20Green%20Screen.mp4';
+  drgVid.loop=true; drgVid.muted=true; drgVid.playsInline=true;
+  drgVid.style.display='none';
+  document.body.appendChild(drgVid);
+  drgVid.play().catch(function(){});
+  var drgOff=document.createElement('canvas');
+  var drgCtx=drgOff.getContext('2d');
+  var DRG_MAX=640; // max processing width for perf
+
   // --- FOG PATCHES (canvas radial, no hard edges) ---
-  var FOG_N=mob?6:10, fogP=[];
+  var FOG_N=mob?8:14, fogP=[];
   function mkFog(init){
-    var minR=Math.min(W,H)*0.22;
-    var maxR=Math.min(W,H)*0.55;
+    var minR=Math.min(W,H)*0.3;
+    var maxR=Math.min(W,H)*0.72;
     return {
       x:init?Math.random()*W : (Math.random()<0.5?-maxR:W+maxR),
       y:Math.random()*H,
       r:Math.random()*(maxR-minR)+minR,
-      a:Math.random()*0.13+0.04,
+      a:Math.random()*0.26+0.12,
       dx:(Math.random()-0.5)*0.18,
       dy:(Math.random()-0.5)*0.06,
       t:Math.random()*200,
@@ -1078,6 +1089,27 @@ function sfxAdvance(){playFx('correct');}
 
   function tick(){
     ctx.clearRect(0,0,W,H);
+
+    // Dragon chroma key
+    if(drgVid.readyState>=2&&drgVid.videoWidth>0){
+      var vw=drgVid.videoWidth, vh=drgVid.videoHeight;
+      var s=Math.min(DRG_MAX/vw,1);
+      var dw=Math.floor(vw*s), dh=Math.floor(vh*s);
+      if(drgOff.width!==dw){drgOff.width=dw;drgOff.height=dh;}
+      drgCtx.drawImage(drgVid,0,0,dw,dh);
+      var img=drgCtx.getImageData(0,0,dw,dh), d=img.data;
+      for(var j=0;j<d.length;j+=4){
+        var r=d[j],g=d[j+1],b=d[j+2];
+        if(g>90&&g>r*1.35&&g>b*1.2){d[j+3]=0;}
+      }
+      drgCtx.putImageData(img,0,0);
+      // Centre le dragon, taille naturelle sur l'écran
+      var ds=Math.min(W/dw,H/dh)*0.85;
+      var dx=(W-dw*ds)/2, dy=(H-dh*ds)/2;
+      ctx.globalAlpha=0.82;
+      ctx.drawImage(drgOff,dx,dy,dw*ds,dh*ds);
+      ctx.globalAlpha=1;
+    }
 
     // Fog patches — radial gradients centered within canvas, soft on all sides
     ctx.shadowBlur=0;
