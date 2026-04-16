@@ -475,37 +475,46 @@ function renderWP() {
     grp.style.cursor = "pointer";
     grp.addEventListener("click",function(){ clickWP(i); });
 
-    if(isEnd){
+    if(here||isEnd){
       var pu=svgEl("circle"); pu.setAttribute("r",r+8); pu.setAttribute("fill","none");
-      pu.setAttribute("stroke","#f0d060");
+      pu.setAttribute("stroke",isEnd?"#f0d060":"#c8922a");
       pu.setAttribute("stroke-width","1"); pu.setAttribute("opacity","0.4");
       grp.appendChild(pu);
     }
-    var c=svgEl("circle"); c.setAttribute("r",r);
-    c.setAttribute("fill",isEnd?"#2a1400":isStart?"rgba(20,80,20,.7)":wp.cross?"rgba(180,40,40,.35)":"rgba(5,3,1,.85)");
-    c.setAttribute("stroke",isEnd?"#f0d060":isStart?"#60c860":wp.cross?"#e06060":"#4a3010");
-    c.setAttribute("stroke-width",isEnd||isStart?"2.5":wp.cross?"2":"1");
-    grp.appendChild(c);
 
-    if(here&&!isEnd&&!isStart){
-      var cs=r+3;
-      var ln1=svgEl("line");
-      ln1.setAttribute("x1",-cs);ln1.setAttribute("y1",-cs);
-      ln1.setAttribute("x2",cs);ln1.setAttribute("y2",cs);
-      ln1.setAttribute("stroke","#e02020");ln1.setAttribute("stroke-width","2.5");ln1.setAttribute("stroke-linecap","round");
-      var ln2=svgEl("line");
-      ln2.setAttribute("x1",cs);ln2.setAttribute("y1",-cs);
-      ln2.setAttribute("x2",-cs);ln2.setAttribute("y2",cs);
-      ln2.setAttribute("stroke","#e02020");ln2.setAttribute("stroke-width","2.5");ln2.setAttribute("stroke-linecap","round");
-      grp.appendChild(ln1);grp.appendChild(ln2);
+    if(wp.cross&&!isEnd&&!isStart){
+      // Croix SVG à la place du rond rouge
+      var arm=r-2;
+      var bar=2.5;
+      var cv=svgEl("rect"); cv.setAttribute("x",-bar); cv.setAttribute("y",-arm);
+      cv.setAttribute("width",bar*2); cv.setAttribute("height",arm*2);
+      cv.setAttribute("fill","#c03030"); cv.setAttribute("rx","1");
+      var ch=svgEl("rect"); ch.setAttribute("x",-arm); ch.setAttribute("y",-bar);
+      ch.setAttribute("width",arm*2); ch.setAttribute("height",bar*2);
+      ch.setAttribute("fill","#c03030"); ch.setAttribute("rx","1");
+      // Bordure/outline
+      var cv2=svgEl("rect"); cv2.setAttribute("x",-(bar+1)); cv2.setAttribute("y",-(arm+1));
+      cv2.setAttribute("width",(bar+1)*2); cv2.setAttribute("height",(arm+1)*2);
+      cv2.setAttribute("fill","none"); cv2.setAttribute("stroke","#1a0808"); cv2.setAttribute("stroke-width","0.8"); cv2.setAttribute("rx","1.5");
+      var ch2=svgEl("rect"); ch2.setAttribute("x",-(arm+1)); ch2.setAttribute("y",-(bar+1));
+      ch2.setAttribute("width",(arm+1)*2); ch2.setAttribute("height",(bar+1)*2);
+      ch2.setAttribute("fill","none"); ch2.setAttribute("stroke","#1a0808"); ch2.setAttribute("stroke-width","0.8"); ch2.setAttribute("rx","1.5");
+      grp.appendChild(cv2); grp.appendChild(ch2);
+      grp.appendChild(cv); grp.appendChild(ch);
+    } else {
+      var c=svgEl("circle"); c.setAttribute("r",r);
+      c.setAttribute("fill",isEnd?"#2a1400":isStart?"rgba(20,80,20,.7)":"rgba(5,3,1,.85)");
+      c.setAttribute("stroke",isEnd?"#f0d060":isStart?"#60c860":"#4a3010");
+      c.setAttribute("stroke-width",isEnd||isStart?"2.5":"1");
+      grp.appendChild(c);
+
+      var ic=svgEl("text"); ic.setAttribute("text-anchor","middle"); ic.setAttribute("dominant-baseline","central");
+      ic.setAttribute("font-size",isEnd?"14":isStart?"10":"8");
+      ic.setAttribute("fill",isEnd?"#f0d060":isStart?"#90f090":"#c8922a");
+      ic.setAttribute("font-family","Cinzel,serif");
+      ic.textContent = isEnd?"👑":isStart?"▶":i;
+      grp.appendChild(ic);
     }
-
-    var ic=svgEl("text"); ic.setAttribute("text-anchor","middle"); ic.setAttribute("dominant-baseline","central");
-    ic.setAttribute("font-size",isEnd?"14":isStart?"10":wp.cross?"11":"8");
-    ic.setAttribute("fill",isEnd?"#f0d060":isStart?"#90f090":wp.cross?"#f0a080":"#c8922a");
-    ic.setAttribute("font-family","Cinzel,serif");
-    ic.textContent = isEnd?"👑":isStart?"▶":wp.cross?"X":i;
-    grp.appendChild(ic);
 
     var lbTxt = wp.n.replace(/ [0-9]+\/[0-9]+$/,"");
     var lbBg=svgEl("rect");
