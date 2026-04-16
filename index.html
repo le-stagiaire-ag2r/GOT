@@ -1008,12 +1008,21 @@ function sfxAdvance(){playFx('correct');}
   resize();
 
   // --- DRAGON (chroma key green screen removal) ---
+  var DRG_SRCS=['video-project-22_v9wShYZD.mp4','%5B4K%5D%20Flying%20Dragon%20-%20Green%20Screen.mp4'];
+  var drgIdx=0;
   var drgVid=document.createElement('video');
-  drgVid.src='video-project-22_v9wShYZD.mp4';
-  drgVid.loop=true; drgVid.muted=true; drgVid.playsInline=true;
-  drgVid.style.display='none';
+  drgVid.muted=true; drgVid.playsInline=true; drgVid.style.display='none';
   document.body.appendChild(drgVid);
-  drgVid.play().catch(function(){});
+  function loadDrg(i){
+    drgVid.src=DRG_SRCS[i];
+    drgVid.load();
+    drgVid.play().catch(function(){});
+  }
+  drgVid.addEventListener('ended',function(){
+    drgIdx=(drgIdx+1)%DRG_SRCS.length;
+    loadDrg(drgIdx);
+  });
+  loadDrg(0);
   var drgOff=document.createElement('canvas');
   var drgCtx=drgOff.getContext('2d');
   var DRG_MAX=640; // max processing width for perf
