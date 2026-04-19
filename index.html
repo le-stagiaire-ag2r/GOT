@@ -28,8 +28,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 .char-preview-wrap{text-align:center;margin:4px 0 8px}
 .char-rand{display:inline-block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:#6a4e14;cursor:pointer;padding:4px 10px;border:1px solid #3a2808;background:transparent;margin-top:6px;transition:all .2s}
 .char-rand:hover{border-color:#7a5c1e;color:#c9a84c}
-.char-cats{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.char-cats{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;scroll-behavior:smooth}
 .char-cats::-webkit-scrollbar{display:none}
+.char-scroll-btn{background:transparent;border:1px solid #3a2808;color:#c9a84c;padding:2px 7px;cursor:pointer;font-size:13px;flex-shrink:0;transition:all .2s}
+.char-scroll-btn:hover{border-color:#c9a84c;background:rgba(201,168,76,.1)}
+.char-cats-wrap{display:flex;align-items:center;gap:4px}
 .char-cat-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 8px;border:1px solid #2a1808;background:transparent;cursor:pointer;color:#6a4e14;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;white-space:nowrap;transition:all .2s;flex-shrink:0}
 .char-cat-btn:hover{border-color:#7a5c1e;color:#c9a84c}
 .char-cat-btn.active{border-color:#c9a84c;background:rgba(201,168,76,.1);color:#c9a84c}
@@ -154,7 +157,11 @@ select.inp option{background:#0c0804;color:#f0ddb0}
       </div>
       <div>
         <div class="av-label">PERSONNALISER</div>
-        <div class="char-cats" id="charCatBar"></div>
+        <div class="char-cats-wrap">
+          <button class="char-scroll-btn" onclick="scrollCharCats(-1)">◀</button>
+          <div class="char-cats" id="charCatBar"></div>
+          <button class="char-scroll-btn" onclick="scrollCharCats(1)">▶</button>
+        </div>
         <div class="char-opts" id="charOpts"></div>
       </div>
       <div style="text-align:center;padding-top:4px">
@@ -335,18 +342,19 @@ var CHAR_SKINS=['#ffe0c8','#f5c09a','#dea070','#c07840','#8a4820','#4a2010'];
 var CHAR_HAIR =['#180c06','#3a1808','#6a3020','#a05828','#c89828','#a82010','#888888','#e8e0d0'];
 var CHAR_EYES =['#5a3010','#1868b8','#1a8040','#508898','#7a5820','#6020a0'];
 var CHAR_CATS=[
-  {id:'face',   label:'Visage',  icon:'👤'},
-  {id:'skin',   label:'Teint',   icon:'🎨'},
-  {id:'hair',   label:'Coupe',   icon:'💇'},
-  {id:'hairCol',label:'Couleur', icon:'🖌'},
-  {id:'eyes',   label:'Yeux',    icon:'👁'},
-  {id:'eyeCol', label:'Iris',    icon:'🔵'},
-  {id:'mouth',  label:'Bouche',  icon:'💋'},
-  {id:'beard',  label:'Barbe',   icon:'🧔'},
-  {id:'acc',    label:'Attribut',icon:'👑'}
+  {id:'face',    label:'Visage',  icon:'👤'},
+  {id:'skin',    label:'Teint',   icon:'🎨'},
+  {id:'costume', label:'Tenue',   icon:'🧥'},
+  {id:'hair',    label:'Coupe',   icon:'💇'},
+  {id:'hairCol', label:'Couleur', icon:'🖌'},
+  {id:'eyes',    label:'Yeux',    icon:'👁'},
+  {id:'eyeCol',  label:'Iris',    icon:'🔵'},
+  {id:'mouth',   label:'Bouche',  icon:'💋'},
+  {id:'beard',   label:'Barbe',   icon:'🧔'},
+  {id:'acc',     label:'Attribut',icon:'👑'}
 ];
-var CHAR_COUNTS={face:4,skin:6,hair:6,hairCol:8,eyes:4,eyeCol:6,mouth:4,beard:5,acc:6};
-var DEF_CFG={face:0,skin:2,hair:1,hairCol:0,eyes:1,eyeCol:1,mouth:0,beard:0,acc:0};
+var CHAR_COUNTS={face:4,skin:6,costume:6,hair:6,hairCol:8,eyes:4,eyeCol:6,mouth:4,beard:5,acc:6};
+var DEF_CFG={face:0,skin:2,costume:0,hair:1,hairCol:0,eyes:1,eyeCol:1,mouth:0,beard:0,acc:0};
 var charCfg=Object.assign({},DEF_CFG);
 var charCatAct='skin';
 
@@ -434,18 +442,48 @@ function buildCharSVG(cfg,sz){
   cfg=cfg||{};sz=sz||80;
   var F=cfg.face||0,S=cfg.skin!=null?cfg.skin:2,H=cfg.hair||0;
   var HC=cfg.hairCol||0,E=cfg.eyes||1,EC=cfg.eyeCol!=null?cfg.eyeCol:1;
-  var M=cfg.mouth||0,B=cfg.beard||0,A=cfg.acc||0;
+  var M=cfg.mouth||0,B=cfg.beard||0,A=cfg.acc||0,CO=cfg.costume||0;
   var sk=CHAR_SKINS[S],hc=CHAR_HAIR[HC],ec=CHAR_EYES[EC];
   var sd=_shHex(sk,-55),hl=_shHex(sk,30),hcl=_shHex(hc,32),hcd=_shHex(hc,-35);
   var lip=_shHex(sk,-20);
   var uid='c'+(Math.random()*9999999|0);
   var o='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="'+sz+'" height="'+sz+'">';
-  o+='<circle cx="40" cy="40" r="39" fill="#0a0704"/>';
-  o+='<defs><clipPath id="'+uid+'"><circle cx="40" cy="40" r="36"/></clipPath></defs>';
+  o+='<defs><radialGradient id="gbg'+uid+'" cx="50%" cy="38%" r="68%"><stop offset="0%" stop-color="#2c3f62"/><stop offset="100%" stop-color="#0d1828"/></radialGradient><clipPath id="'+uid+'"><circle cx="40" cy="40" r="36"/></clipPath></defs>';
+  o+='<circle cx="40" cy="40" r="39" fill="url(#gbg'+uid+')"/>';
   o+='<g clip-path="url(#'+uid+')">';
-  // Shoulders
-  o+='<path d="M2,80 C8,60 22,54 40,54 C58,54 72,60 78,80Z" fill="#1c1008"/>';
-  o+='<path d="M14,80 C18,64 26,58 40,58 C54,58 62,64 66,80Z" fill="#241408"/>';
+  // Costume / shoulders
+  if(CO===0){o+='<path d="M2,80 C8,60 22,54 40,54 C58,54 72,60 78,80Z" fill="#1c1008"/><path d="M14,80 C18,64 26,58 40,58 C54,58 62,64 66,80Z" fill="#241408"/>';}
+  else if(CO===1){// Armure chevalier
+    o+='<path d="M2,80 C8,58 20,52 40,52 C60,52 72,58 78,80Z" fill="#48485a"/>';
+    o+='<path d="M14,80 C17,63 23,57 40,56 C57,57 63,63 66,80Z" fill="#585868"/>';
+    o+='<ellipse cx="22" cy="55" rx="11" ry="6" fill="#505060"/><ellipse cx="58" cy="55" rx="11" ry="6" fill="#505060"/>';
+    o+='<path d="M22,49 Q22,55 14,57" fill="none" stroke="#686878" stroke-width="1"/><path d="M58,49 Q58,55 66,57" fill="none" stroke="#686878" stroke-width="1"/>';
+    o+='<path d="M29,54 L51,54" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>';
+    o+='<path d="M27,58 Q40,62 53,58" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.4"/>';}
+  else if(CO===2){// Robe noble rouge
+    o+='<path d="M2,80 C6,56 16,50 40,50 C64,50 74,56 78,80Z" fill="#5a0a0a"/>';
+    o+='<path d="M16,80 C19,60 25,54 40,54 C55,54 61,60 64,80Z" fill="#701010"/>';
+    o+='<path d="M36,54 L40,80 L44,54" fill="#7a1010"/>';
+    o+='<path d="M30,52 Q40,59 50,52" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity="0.75"/>';
+    o+='<path d="M28,56 Q40,63 52,56" fill="none" stroke="#c9a84c" stroke-width="1" opacity="0.4"/>';}
+  else if(CO===3){// Cape de loup / Nord
+    o+='<path d="M2,80 C4,56 12,48 40,48 C68,48 76,56 78,80Z" fill="#2a1c10"/>';
+    o+='<path d="M10,55 C14,51 18,49 22,51 C26,49 30,47 34,51 C38,47 42,51 46,47 C50,51 54,49 58,51 C62,49 66,51 70,55" fill="none" stroke="#4a3020" stroke-width="2.5" opacity="0.85"/>';
+    o+='<path d="M10,59 C14,55 18,53 22,55 C26,53 30,51 34,55 C38,51 42,55 46,51 C50,55 54,53 58,55 C62,53 66,55 70,59" fill="none" stroke="#3a2818" stroke-width="2" opacity="0.65"/>';
+    o+='<path d="M18,80 C20,62 26,56 40,54 C54,56 60,62 62,80Z" fill="#1e1408"/>';}
+  else if(CO===4){// Mestre
+    o+='<path d="M2,80 C6,58 16,52 40,52 C64,52 74,58 78,80Z" fill="#c8c0b0"/>';
+    o+='<path d="M18,80 C20,62 26,56 40,56 C54,56 60,62 62,80Z" fill="#b8b0a0"/>';
+    o+='<path d="M24,60 C40,57 56,60" fill="none" stroke="#808080" stroke-width="2.5" stroke-dasharray="3,2" opacity="0.8"/>';
+    o+='<circle cx="26" cy="60" r="1.5" fill="#a0a0a0" opacity="0.9"/><circle cx="32" cy="59" r="1.5" fill="#a0a0a0" opacity="0.9"/>';
+    o+='<circle cx="38" cy="58" r="1.5" fill="#a0a0a0" opacity="0.9"/><circle cx="44" cy="59" r="1.5" fill="#a0a0a0" opacity="0.9"/>';
+    o+='<circle cx="50" cy="60" r="1.5" fill="#a0a0a0" opacity="0.9"/>';}
+  else if(CO===5){// Garde de Nuit
+    o+='<path d="M2,80 C6,56 16,50 40,50 C64,50 74,56 78,80Z" fill="#080808"/>';
+    o+='<path d="M16,80 C18,60 24,54 40,54 C56,54 62,60 64,80Z" fill="#111"/>';
+    o+='<path d="M8,60 L16,80" stroke="#1c1c1c" stroke-width="2"/><path d="M72,60 L64,80" stroke="#1c1c1c" stroke-width="2"/>';
+    o+='<path d="M24,54 Q40,58 56,54" fill="none" stroke="#222" stroke-width="1.5"/>';
+    o+='<path d="M24,54 Q40,60 56,54" fill="none" stroke="#888" stroke-width="0.6" opacity="0.4"/>'; }
   // Neck
   var nw=[11,9,13,8][F];
   o+='<rect x="'+(40-nw/2)+'" y="58" width="'+nw+'" height="20" fill="'+sk+'"/>';
@@ -633,8 +671,13 @@ function buildCatOpts(id){
   }
 }
 
+function scrollCharCats(dir){
+  var el=document.getElementById('charCatBar');
+  if(el) el.scrollLeft+=dir*90;
+}
+
 function randomizeChar(){
-  var keys=['face','skin','hair','hairCol','eyes','eyeCol','mouth','beard','acc'];
+  var keys=['face','skin','costume','hair','hairCol','eyes','eyeCol','mouth','beard','acc'];
   keys.forEach(function(k){charCfg[k]=Math.floor(Math.random()*CHAR_COUNTS[k]);});
   buildCatBar();
   buildCatOpts(charCatAct);
