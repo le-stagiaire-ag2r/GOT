@@ -451,6 +451,7 @@ async function startJourney() {
         goTo("sGame");
         resetView();
         refresh();
+        setTimeout(startTutorial, 900);
         return;
       }
     }catch(e){}
