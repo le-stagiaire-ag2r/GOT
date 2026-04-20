@@ -1231,6 +1231,7 @@ startListeners();
 // ── EXPOSE AU DOM ──
 // ── MONTH RESUME ──
 function showMonthResume(){
+  closeOv(); // ferme le panel quête avant d'afficher le résumé
   var nQ=QUESTIONS[curMonth].qs.length;
   var totalPossible=(curMonth+1)*nQ;
   var totalScore=ME?ME.pos:0;
@@ -1263,6 +1264,9 @@ var TUTO=[
   {target:null, msg:'Bienvenue dans la <strong>Conquête de Westeros</strong> !<br><br>Je vais te faire visiter l\'interface en quelques étapes. Suis les instructions pour découvrir chaque zone.', btn:'Commencer ⚔'},
   {target:'#bLead', msg:'📊 <strong>Classement</strong><br><br>Ici tu peux voir <strong>en temps réel</strong> où se situent tous les joueurs et qui mène la course au Trône de Fer. Le classement se met à jour automatiquement.', hint:'👆 Clique sur Classement pour continuer'},
   {target:'#bQuest', msg:'📜 <strong>Quête du mois</strong><br><br>C\'est ici que tu trouveras les <strong>questions du mois</strong>. Réponds correctement pour avancer d\'une case sur la carte. 3 questions par mois !', hint:'👆 Clique sur Quête pour continuer'},
+  {type:'quiz', msg:'🎯 <strong>Question d\'entraînement</strong><br><br>Voici à quoi ressemble une quête ! Cette réponse <strong>ne compte pas</strong>, c\'est pour t\'entraîner.', hint:'👆 Clique sur une réponse pour continuer',
+   q:'Quel est le célèbre dicton de la Maison Stark ?',
+   opts:['L\'Été sera court','L\'Hiver vient','Feu et Sang','Entends mon rugissement'], c:1},
   {target:'#bMap', msg:'🗺 <strong>Carte de Westeros</strong><br><br>La carte affiche la <strong>progression en direct</strong> de tous les joueurs. Pinch pour zoomer, glisse pour te déplacer sur la carte.', hint:'👆 Clique sur Carte pour continuer'},
   {target:null, msg:'💡 <strong>Les cases joueurs</strong><br><br>Sur la carte, si une case affiche <strong>×3</strong> par exemple, c\'est que 3 joueurs s\'y trouvent. Clique dessus pour voir leur portrait et leur nom !<br><br>Tu es prêt à conquérir Westeros — que les dieux t\'accompagnent.', btn:'C\'est parti ! 🐉'}
 ];
@@ -1276,14 +1280,34 @@ function _showTStep(i){
   if(i>=TUTO.length){_endTuto();return;}
   _tStep=i;
   var s=TUTO[i];
-  // Reset previous highlight
   if(_tHdl){_tHdl.el.removeEventListener('click',_tHdl.fn);_tHdl=null;}
   document.querySelectorAll('.tuto-hl').forEach(function(e){e.classList.remove('tuto-hl');});
   var ov=document.getElementById('tutoOv');
   var bub=document.getElementById('tutoBubble');
   var arr=document.getElementById('tutoArrow');
   ov.style.display='block';
-  // Bubble content
+
+  // ── QUIZ sub-step ──
+  if(s.type==='quiz'){
+    arr.style.display='none';
+    // Inject fake question into the quest panel
+    setTimeout(function(){
+      var panel=document.getElementById('panel');
+      if(panel){
+        var letters=['A','B','C','D'];
+        var optsHtml=s.opts.map(function(o,j){
+          return '<button class="opt tuto-opt" onclick="tutoAnswerQuiz('+j+','+s.c+')" style="width:100%;text-align:left;padding:10px 14px;margin-bottom:6px;font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;background:rgba(255,255,255,.03);border:1px solid #3a2808;color:#c8922a;cursor:pointer">'+letters[j]+'. '+o+'</button>';
+        }).join('');
+        panel.innerHTML='<div style="padding:12px 0"><p style="font-family:Cinzel,serif;font-size:13px;color:#e8d4a0;margin-bottom:16px;line-height:1.6">'+s.q+'</p>'+optsHtml+'</div>';
+      }
+    },150);
+    bub.style.cssText='display:block;position:fixed;max-width:300px;min-width:230px;background:#140d04;border:1px solid #c9a84c;padding:20px;font-family:Cinzel,serif;color:#e8d4a0;font-size:12px;line-height:1.75;z-index:505;box-shadow:0 8px 32px rgba(0,0,0,.9);border-radius:2px;bottom:80px;left:50%;transform:translateX(-50%)';
+    var h=s.msg+'<div class="tuto-prog">Étape '+(i+1)+' / '+TUTO.length+'</div>';
+    if(s.hint) h+='<span class="tuto-hint">'+s.hint+'</span>';
+    bub.innerHTML=h;
+    return;
+  }
+
   var h=s.msg+'<div class="tuto-prog">Étape '+(i+1)+' / '+TUTO.length+'</div>';
   if(s.btn) h+='<button class="tuto-btn" onclick="window._tutoNext()">'+s.btn+'</button>';
   if(s.hint) h+='<span class="tuto-hint">'+s.hint+'</span>';
@@ -1303,6 +1327,17 @@ function _showTStep(i){
   }
 }
 window._tutoNext=function(){_showTStep(_tStep+1);};
+window.tutoAnswerQuiz=function(chosen,correct){
+  document.querySelectorAll('.tuto-opt').forEach(function(b,i){
+    b.disabled=true;
+    if(i===correct) b.style.cssText+=';background:rgba(30,120,30,.3);border-color:#40c040;color:#80f080';
+    else if(i===chosen) b.style.cssText+=';background:rgba(120,20,20,.3);border-color:#c03030;color:#f08080';
+  });
+  setTimeout(function(){
+    document.getElementById('panel').innerHTML=buildQuest();
+    _showTStep(_tStep+1);
+  },1400);
+};
 function _endTuto(){
   localStorage.setItem('wc_tuto','1');
   ['tutoOv','tutoBubble','tutoArrow'].forEach(function(id){document.getElementById(id).style.display='none';});
