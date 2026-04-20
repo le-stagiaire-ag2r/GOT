@@ -1231,6 +1231,7 @@ startListeners();
 // ── EXPOSE AU DOM ──
 // ── MONTH RESUME ──
 function showMonthResume(){
+  closeOv(); // ferme le panel quête avant d'afficher le résumé
   var nQ=QUESTIONS[curMonth].qs.length;
   var totalPossible=(curMonth+1)*nQ;
   var totalScore=ME?ME.pos:0;
