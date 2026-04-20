@@ -1336,7 +1336,7 @@ window.tutoAnswerQuiz=function(chosen,correct){
     else if(i===chosen) b.style.cssText+=';background:rgba(120,20,20,.3);border-color:#c03030;color:#f08080';
   });
   setTimeout(function(){
-    document.getElementById('panel').innerHTML=buildQuest();
+    closeOv();
     _showTStep(_tStep+1);
   },1400);
 };
