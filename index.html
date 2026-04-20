@@ -116,7 +116,7 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .btn-sec{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:10px 24px;border:1px solid #6a4e14;background:transparent;color:#8a6a38;cursor:pointer;transition:all .3s}
 .btn-sec:hover{border-color:#c9a84c;color:#c9a84c}
 /* ── TUTORIAL ── */
-#tutoOv{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.74);z-index:500}
+#tutoOv{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.74);z-index:500;pointer-events:none}
 #tutoBubble{display:none;position:fixed;max-width:300px;min-width:230px;background:#140d04;border:1px solid #c9a84c;padding:20px;font-family:'Cinzel',serif;color:#e8d4a0;font-size:12px;line-height:1.75;z-index:505;box-shadow:0 8px 32px rgba(0,0,0,0.9);border-radius:2px}
 #tutoBubble strong{color:#f0d080}
 .tuto-hint{display:block;color:#c9a84c;font-size:10px;margin-top:12px;text-align:center;letter-spacing:1.5px;animation:tblink 1.2s infinite}
@@ -1232,7 +1232,6 @@ function _showTStep(i){
   _tStep=i;
   var s=TUTO[i];
   // Reset previous highlight
-  if(_tCont){_tCont.style.zIndex='';_tCont=null;}
   if(_tHdl){_tHdl.el.removeEventListener('click',_tHdl.fn);_tHdl=null;}
   document.querySelectorAll('.tuto-hl').forEach(function(e){e.classList.remove('tuto-hl');});
   var ov=document.getElementById('tutoOv');
@@ -1247,8 +1246,6 @@ function _showTStep(i){
   if(s.target){
     var el=document.querySelector(s.target);
     if(!el){_showTStep(i+1);return;}
-    var cont=el.closest('#top')||el.closest('#bot')||el.parentElement;
-    cont.style.zIndex='502'; _tCont=cont;
     el.classList.add('tuto-hl');
     var fn=function(){_showTStep(i+1);}; el.addEventListener('click',fn,{once:true});
     _tHdl={el:el,fn:fn};
@@ -1264,7 +1261,6 @@ window._tutoNext=function(){_showTStep(_tStep+1);};
 function _endTuto(){
   localStorage.setItem('wc_tuto','1');
   ['tutoOv','tutoBubble','tutoArrow'].forEach(function(id){document.getElementById(id).style.display='none';});
-  if(_tCont){_tCont.style.zIndex='';_tCont=null;}
   document.querySelectorAll('.tuto-hl').forEach(function(e){e.classList.remove('tuto-hl');});
 }
 
