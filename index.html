@@ -51,7 +51,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 .brand{font-family:'Cinzel Decorative',serif;font-size:14px;color:#c9a84c;letter-spacing:2px}
 .sub{font-size:7px;color:#6a4e14;letter-spacing:4px;margin-top:1px}
 .tnav{display:flex;gap:4px}
-.tb{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;padding:5px 10px;border:1px solid #4a3010;background:transparent;color:#8a6a38;cursor:pointer;transition:all .2s}
+.tb{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;padding:5px 10px;border:1px solid #6a4010;background:rgba(0,0,0,0.55);color:#e8d8b0;cursor:pointer;transition:all .2s;text-shadow:0 1px 2px rgba(0,0,0,0.8)}
 .tb:hover,.tb.on{border-color:#c9a84c;color:#f0d080;background:rgba(201,168,76,.1)}
 .pbadge{display:flex;align-items:center;gap:7px}
 .pbadge-av{width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -771,15 +771,15 @@ function renderWP() {
       grp.appendChild(cv); grp.appendChild(ch);
     } else {
       var c=svgEl("circle"); c.setAttribute("r",r);
-      c.setAttribute("fill",isEnd?"#2a1400":isStart?"rgba(20,80,20,.85)":"rgba(235,218,175,0.92)");
-      c.setAttribute("stroke",isEnd?"#f0d060":isStart?"#60c860":"#6a4010");
-      c.setAttribute("stroke-width",isEnd||isStart?"2.5":"1.5");
+      c.setAttribute("fill",isEnd?"#2a1400":isStart?"rgba(20,80,20,.7)":"rgba(5,3,1,.85)");
+      c.setAttribute("stroke",isEnd?"#f0d060":isStart?"#60c860":"#4a3010");
+      c.setAttribute("stroke-width",isEnd||isStart?"2.5":"1");
       grp.appendChild(c);
 
       var ic=svgEl("text"); ic.setAttribute("text-anchor","middle"); ic.setAttribute("dominant-baseline","central");
       ic.setAttribute("font-size",isEnd?"14":isStart?"10":"8");
-      ic.setAttribute("fill",isEnd?"#f0d060":isStart?"#90f090":"#1a0800");
-      ic.setAttribute("font-family","Cinzel,serif"); ic.setAttribute("font-weight","700");
+      ic.setAttribute("fill",isEnd?"#f0d060":isStart?"#90f090":"#c8922a");
+      ic.setAttribute("font-family","Cinzel,serif");
       ic.textContent = isEnd?"👑":isStart?"▶":i;
       grp.appendChild(ic);
     }
@@ -789,12 +789,12 @@ function renderWP() {
     var lbW = lbTxt.length*5+8;
     lbBg.setAttribute("x",-lbW/2); lbBg.setAttribute("y",r+13);
     lbBg.setAttribute("width",lbW); lbBg.setAttribute("height","12");
-    lbBg.setAttribute("fill",isEnd?"rgba(0,0,0,0.7)":"rgba(235,218,175,0.88)"); lbBg.setAttribute("rx","2");
+    lbBg.setAttribute("fill","rgba(0,0,0,0.65)"); lbBg.setAttribute("rx","2");
     grp.appendChild(lbBg);
     var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",r+22);
-    lb.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#6a1000":"#1a0800");
+    lb.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#ffb080":"#ffffff");
     lb.setAttribute("font-size","8"); lb.setAttribute("font-family","Cinzel,serif");
-    lb.setAttribute("font-weight","700");
+    lb.setAttribute("font-weight","600");
     lb.textContent = lbTxt;
     grp.appendChild(lb);
 
