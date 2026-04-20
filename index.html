@@ -695,9 +695,12 @@ function randomizeChar(){
   renderCharPreview();
 }
 
+var _confirmBusy=false;
 async function confirmAvatar() {
+  if(_confirmBusy) return;
+  _confirmBusy=true;
   var name = document.getElementById("playerName").value.trim();
-  if(!name){ notify("Entrez votre prénom !"); return; }
+  if(!name){ notify("Entrez votre prénom !"); _confirmBusy=false; return; }
   var pid = localStorage.getItem("wc_playerId") || genUUID();
   try{
     var snap = await getDoc(doc(db,'players',pid));
@@ -712,6 +715,7 @@ async function confirmAvatar() {
     resetView();
     refresh();
   }catch(e){ notify("Erreur de connexion. Réessayez."); }
+  _confirmBusy=false;
 }
 
 // ── SAVE PLAYER ──
@@ -818,25 +822,32 @@ function renderPP() {
     grp.addEventListener("click",function(){showPlayersAt(pos,group);});
 
     if(single){
+      // Halo blanc + ombre pour ressortir sur la carte
+      var shadow=svgEl("circle"); shadow.setAttribute("r","19");
+      shadow.setAttribute("fill","rgba(0,0,0,0.45)"); shadow.setAttribute("cx","1"); shadow.setAttribute("cy","2");
+      grp.appendChild(shadow);
+      var bg=svgEl("circle"); bg.setAttribute("r","19");
+      bg.setAttribute("fill","#f5ead0"); bg.setAttribute("stroke","#c9a84c"); bg.setAttribute("stroke-width","1.5");
+      grp.appendChild(bg);
       var img=svgEl("image");
       img.setAttribute("href",charDataUri(group[0],34));
       img.setAttribute("x","-17"); img.setAttribute("y","-17");
       img.setAttribute("width","34"); img.setAttribute("height","34");
       grp.appendChild(img);
     } else {
-      // Plusieurs joueurs — "×N" avec contour sombre pour lisibilité
+      // Plusieurs joueurs — badge doré avec compte
+      var shadow2=svgEl("circle"); shadow2.setAttribute("r","16");
+      shadow2.setAttribute("fill","rgba(0,0,0,0.45)"); shadow2.setAttribute("cx","1"); shadow2.setAttribute("cy","2");
+      grp.appendChild(shadow2);
+      var bgM=svgEl("circle"); bgM.setAttribute("r","16");
+      bgM.setAttribute("fill",hasMe?"#3a2808":"#1a1008");
+      bgM.setAttribute("stroke",hasMe?"#f0d080":"#c9a84c"); bgM.setAttribute("stroke-width","1.5");
+      grp.appendChild(bgM);
       var label="×"+group.length;
-      var outline=svgEl("text"); outline.setAttribute("text-anchor","middle"); outline.setAttribute("dominant-baseline","central");
-      outline.setAttribute("font-family","Cinzel,serif"); outline.setAttribute("font-weight","700");
-      outline.setAttribute("font-size","13"); outline.setAttribute("fill","none");
-      outline.setAttribute("stroke","rgba(0,0,0,0.85)"); outline.setAttribute("stroke-width","3");
-      outline.setAttribute("stroke-linejoin","round");
-      outline.textContent=label;
-      grp.appendChild(outline);
       var count=svgEl("text"); count.setAttribute("text-anchor","middle"); count.setAttribute("dominant-baseline","central");
       count.setAttribute("font-family","Cinzel,serif"); count.setAttribute("font-weight","700");
-      count.setAttribute("font-size","13");
-      count.setAttribute("fill",hasMe?"#f0d080":"#ffffff");
+      count.setAttribute("font-size","12");
+      count.setAttribute("fill",hasMe?"#f0d080":"#c9a84c");
       count.textContent=label;
       grp.appendChild(count);
     }
