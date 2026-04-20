@@ -451,10 +451,12 @@ async function startJourney() {
         goTo("sGame");
         resetView();
         refresh();
+        setTimeout(startTutorial, 900);
         return;
       }
     }catch(e){}
     localStorage.removeItem("wc_playerId");
+    localStorage.removeItem("wc_tuto");
   }
   goTo("sAvatar");
 }
