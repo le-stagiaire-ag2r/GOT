@@ -115,6 +115,22 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .btn-main:hover{background:rgba(201,168,76,.25)}
 .btn-sec{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:10px 24px;border:1px solid #6a4e14;background:transparent;color:#8a6a38;cursor:pointer;transition:all .3s}
 .btn-sec:hover{border-color:#c9a84c;color:#c9a84c}
+/* ── RESUME MODAL ── */
+#resumeModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:400;align-items:center;justify-content:center}
+#resumeBox{max-width:360px;width:90%;background:#100a02;border:1px solid #c9a84c;padding:28px 24px;font-family:'Cinzel',serif;color:#e8d4a0;text-align:center}
+.rmo-title{font-size:11px;letter-spacing:3px;color:#c9a84c;margin-bottom:18px}
+.rmo-stars{font-size:30px;margin:8px 0 14px;letter-spacing:4px}
+.rmo-month{font-size:22px;color:#f0d080;margin-bottom:4px}
+.rmo-sub{font-size:10px;color:#6a4e14;letter-spacing:1px;margin-bottom:16px}
+.rmo-div{border:none;border-top:1px solid #2a1808;margin:16px 0}
+.rmo-glabel{font-size:10px;color:#a08040;letter-spacing:2px;margin-bottom:8px}
+.rmo-gtotal{font-size:26px;color:#f0d080;margin-bottom:4px}
+.rmo-bar{height:6px;background:#1a1008;border:1px solid #3a2008;border-radius:3px;overflow:hidden;margin:8px 0 4px}
+.rmo-barf{height:100%;background:linear-gradient(90deg,#8a4010,#c9a84c);border-radius:3px;transition:width .8s ease}
+.rmo-pct{font-size:9px;color:#6a4e14;margin-bottom:18px;letter-spacing:1px}
+.rmo-rdv{color:#c9a84c;font-size:10px;letter-spacing:2px;line-height:1.8;margin-bottom:18px}
+.rmo-close{display:block;width:100%;padding:10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:transparent;color:#c9a84c;transition:all .2s}
+.rmo-close:hover{background:rgba(201,168,76,.12);color:#f0d080}
 /* ── TUTORIAL ── */
 #tutoOv{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.74);z-index:500;pointer-events:none}
 #tutoBubble{display:none;position:fixed;max-width:300px;min-width:230px;background:#140d04;border:1px solid #c9a84c;padding:20px;font-family:'Cinzel',serif;color:#e8d4a0;font-size:12px;line-height:1.75;z-index:505;box-shadow:0 8px 32px rgba(0,0,0,0.9);border-radius:2px}
@@ -1000,7 +1016,7 @@ function answer(chosen){
   document.querySelectorAll(".opt").forEach(function(b,i){b.disabled=true;if(i===q.c)b.classList.add("ok");else if(i===chosen)b.classList.add("ko");});
   var fb=document.getElementById("qfb");
   var isLast=(curQ>=QUESTIONS[curMonth].qs.length-1);
-  var nextBtn='<button onclick="nextQuestion()" style="width:100%;margin-top:12px;padding:10px;font-family:Cinzel,serif;font-size:10px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080">'+(isLast?"⚔ RÉSUMÉ DU MOIS":"QUESTION SUIVANTE →")+"</button>";
+  var nextBtn='<button onclick="'+(isLast?'showMonthResume()':'nextQuestion()')+'" style="width:100%;margin-top:12px;padding:10px;font-family:Cinzel,serif;font-size:10px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080">'+(isLast?"⚔ RÉSUMÉ DU MOIS":"QUESTION SUIVANTE →")+"</button>";
   if(chosen===q.c){
     sfxCorrect();
     monthScore++;
@@ -1213,6 +1229,35 @@ initCharCreator();
 startListeners();
 
 // ── EXPOSE AU DOM ──
+// ── MONTH RESUME ──
+function showMonthResume(){
+  var nQ=QUESTIONS[curMonth].qs.length;
+  var totalPossible=(curMonth+1)*nQ;
+  var totalScore=ME?ME.pos:0;
+  var pct=totalPossible>0?Math.round(totalScore/totalPossible*100):0;
+  var barW=Math.min(100,pct);
+  var stars='';
+  for(var i=0;i<nQ;i++) stars+=(i<monthScore?'⭐':'☆');
+  var box=document.getElementById('resumeBox');
+  box.innerHTML=
+    '<div class="rmo-title">⚔ RÉSUMÉ DU MOIS ⚔</div>'
+    +'<div class="rmo-stars">'+stars+'</div>'
+    +'<div class="rmo-month"><strong>'+monthScore+' / '+nQ+'</strong></div>'
+    +'<div class="rmo-sub">bonnes réponses ce mois-ci</div>'
+    +'<hr class="rmo-div">'
+    +'<div class="rmo-glabel">SCORE GÉNÉRAL</div>'
+    +'<div class="rmo-gtotal"><strong>'+totalScore+' / '+totalPossible+'</strong></div>'
+    +'<div class="rmo-bar"><div class="rmo-barf" style="width:0%" id="resumeBarFill"></div></div>'
+    +'<div class="rmo-pct">'+pct+'% des questions réussies au total</div>'
+    +'<div class="rmo-rdv">RDV LE MOIS PROCHAIN<br>POUR 3 NOUVELLES QUÊTES !</div>'
+    +'<button class="rmo-close" onclick="document.getElementById(\'resumeModal\').style.display=\'none\'">FERMER ✕</button>';
+  document.getElementById('resumeModal').style.display='flex';
+  setTimeout(function(){
+    var f=document.getElementById('resumeBarFill');
+    if(f) f.style.width=barW+'%';
+  },200);
+}
+
 // ── TUTORIAL ──
 var TUTO=[
   {target:null, msg:'Bienvenue dans la <strong>Conquête de Westeros</strong> !<br><br>Je vais te faire visiter l\'interface en quelques étapes. Suis les instructions pour découvrir chaque zone.', btn:'Commencer ⚔'},
@@ -1266,6 +1311,7 @@ function _endTuto(){
 
 window.goTo=goTo; window.startJourney=startJourney; window.confirmAvatar=confirmAvatar;
 window.selectCharCat=selectCharCat; window.randomizeChar=randomizeChar; window.scrollCharCats=scrollCharCats;
+window.showMonthResume=showMonthResume;
 window.nav=nav; window.closeOv=closeOv; window.closeOverlay=closeOverlay;
 window.answer=answer; window.nextQuestion=nextQuestion;
 window.checkAdmin=checkAdmin; window.addQuestion=addQuestion;
@@ -1556,6 +1602,11 @@ function sfxAdvance(){playFx('correct');}
   tick();
 })();
 </script>
+
+<!-- RESUME MODAL -->
+<div id="resumeModal">
+  <div id="resumeBox"></div>
+</div>
 
 <!-- TUTORIAL OVERLAY -->
 <div id="tutoOv"></div>
