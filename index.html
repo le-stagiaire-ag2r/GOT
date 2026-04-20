@@ -115,10 +115,18 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .btn-main:hover{background:rgba(201,168,76,.25)}
 .btn-sec{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:10px 24px;border:1px solid #6a4e14;background:transparent;color:#8a6a38;cursor:pointer;transition:all .3s}
 .btn-sec:hover{border-color:#c9a84c;color:#c9a84c}
-/* ── BACKGROUND FX ── */
-#worldSvg text{text-rendering:geometricPrecision;font-smooth:always;-webkit-font-smoothing:antialiased}
-#bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
-#vignette{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 48%,rgba(1,3,8,.58) 100%)}
+/* ── TUTORIAL ── */
+#tutoOv{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.74);z-index:500}
+#tutoBubble{display:none;position:fixed;max-width:300px;min-width:230px;background:#140d04;border:1px solid #c9a84c;padding:20px;font-family:'Cinzel',serif;color:#e8d4a0;font-size:12px;line-height:1.75;z-index:505;box-shadow:0 8px 32px rgba(0,0,0,0.9);border-radius:2px}
+#tutoBubble strong{color:#f0d080}
+.tuto-hint{display:block;color:#c9a84c;font-size:10px;margin-top:12px;text-align:center;letter-spacing:1.5px;animation:tblink 1.2s infinite}
+@keyframes tblink{0%,100%{opacity:1}50%{opacity:0.35}}
+.tuto-prog{text-align:right;font-size:9px;color:#4a3010;margin-top:10px;letter-spacing:1px}
+.tuto-btn{display:block;width:100%;margin-top:14px;padding:10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;background:transparent;border:1px solid #c9a84c;color:#c9a84c;cursor:pointer;transition:all .2s}
+.tuto-btn:hover{background:rgba(201,168,76,.12);color:#f0d080}
+.tuto-hl{outline:2px solid #c9a84c;outline-offset:4px;animation:tpulse 1.4s infinite}
+@keyframes tpulse{0%,100%{outline-color:#c9a84c;box-shadow:0 0 10px rgba(201,168,76,.5)}50%{outline-color:#f0d080;box-shadow:0 0 22px rgba(240,208,128,.85)}}
+#tutoArrow{display:none;position:fixed;z-index:505;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:12px solid #c9a84c}
 </style>
 </head>
 <body>
@@ -714,6 +722,7 @@ async function confirmAvatar() {
     goTo("sGame");
     resetView();
     refresh();
+    setTimeout(startTutorial, 900);
   }catch(e){ notify("Erreur de connexion. Réessayez."); }
   _confirmBusy=false;
 }
@@ -1204,6 +1213,61 @@ initCharCreator();
 startListeners();
 
 // ── EXPOSE AU DOM ──
+// ── TUTORIAL ──
+var TUTO=[
+  {target:null, msg:'Bienvenue dans la <strong>Conquête de Westeros</strong> !<br><br>Je vais te faire visiter l\'interface en quelques étapes. Suis les instructions pour découvrir chaque zone.', btn:'Commencer ⚔'},
+  {target:'#bLead', msg:'📊 <strong>Classement</strong><br><br>Ici tu peux voir <strong>en temps réel</strong> où se situent tous les joueurs et qui mène la course au Trône de Fer. Le classement se met à jour automatiquement.', hint:'👆 Clique sur Classement pour continuer'},
+  {target:'#bQuest', msg:'📜 <strong>Quête du mois</strong><br><br>C\'est ici que tu trouveras les <strong>questions du mois</strong>. Réponds correctement pour avancer d\'une case sur la carte. 3 questions par mois !', hint:'👆 Clique sur Quête pour continuer'},
+  {target:'#bMap', msg:'🗺 <strong>Carte de Westeros</strong><br><br>La carte affiche la <strong>progression en direct</strong> de tous les joueurs. Pinch pour zoomer, glisse pour te déplacer sur la carte.', hint:'👆 Clique sur Carte pour continuer'},
+  {target:null, msg:'💡 <strong>Les cases joueurs</strong><br><br>Sur la carte, si une case affiche <strong>×3</strong> par exemple, c\'est que 3 joueurs s\'y trouvent. Clique dessus pour voir leur portrait et leur nom !<br><br>Tu es prêt à conquérir Westeros — que les dieux t\'accompagnent.', btn:'C\'est parti ! 🐉'}
+];
+var _tStep=0,_tCont=null,_tHdl=null;
+
+function startTutorial(){
+  if(localStorage.getItem('wc_tuto')) return;
+  _tStep=0; _showTStep(0);
+}
+function _showTStep(i){
+  if(i>=TUTO.length){_endTuto();return;}
+  _tStep=i;
+  var s=TUTO[i];
+  // Reset previous highlight
+  if(_tCont){_tCont.style.zIndex='';_tCont=null;}
+  if(_tHdl){_tHdl.el.removeEventListener('click',_tHdl.fn);_tHdl=null;}
+  document.querySelectorAll('.tuto-hl').forEach(function(e){e.classList.remove('tuto-hl');});
+  var ov=document.getElementById('tutoOv');
+  var bub=document.getElementById('tutoBubble');
+  var arr=document.getElementById('tutoArrow');
+  ov.style.display='block';
+  // Bubble content
+  var h=s.msg+'<div class="tuto-prog">Étape '+(i+1)+' / '+TUTO.length+'</div>';
+  if(s.btn) h+='<button class="tuto-btn" onclick="window._tutoNext()">'+s.btn+'</button>';
+  if(s.hint) h+='<span class="tuto-hint">'+s.hint+'</span>';
+  bub.innerHTML=h;
+  if(s.target){
+    var el=document.querySelector(s.target);
+    if(!el){_showTStep(i+1);return;}
+    var cont=el.closest('#top')||el.closest('#bot')||el.parentElement;
+    cont.style.zIndex='502'; _tCont=cont;
+    el.classList.add('tuto-hl');
+    var fn=function(){_showTStep(i+1);}; el.addEventListener('click',fn,{once:true});
+    _tHdl={el:el,fn:fn};
+    var rect=el.getBoundingClientRect();
+    arr.style.cssText='display:block;position:fixed;z-index:505;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:12px solid #c9a84c;top:'+(rect.bottom+2)+'px;left:'+(rect.left+rect.width/2-9)+'px';
+    bub.style.cssText='display:block;position:fixed;max-width:300px;min-width:230px;background:#140d04;border:1px solid #c9a84c;padding:20px;font-family:Cinzel,serif;color:#e8d4a0;font-size:12px;line-height:1.75;z-index:505;box-shadow:0 8px 32px rgba(0,0,0,.9);border-radius:2px;top:'+(rect.bottom+14)+'px;left:'+Math.max(8,Math.min(window.innerWidth-310,rect.left+rect.width/2-150))+'px';
+  } else {
+    arr.style.display='none';
+    bub.style.cssText='display:block;position:fixed;max-width:300px;min-width:230px;background:#140d04;border:1px solid #c9a84c;padding:20px;font-family:Cinzel,serif;color:#e8d4a0;font-size:12px;line-height:1.75;z-index:505;box-shadow:0 8px 32px rgba(0,0,0,.9);border-radius:2px;top:50%;left:50%;transform:translate(-50%,-50%)';
+  }
+}
+window._tutoNext=function(){_showTStep(_tStep+1);};
+function _endTuto(){
+  localStorage.setItem('wc_tuto','1');
+  ['tutoOv','tutoBubble','tutoArrow'].forEach(function(id){document.getElementById(id).style.display='none';});
+  if(_tCont){_tCont.style.zIndex='';_tCont=null;}
+  document.querySelectorAll('.tuto-hl').forEach(function(e){e.classList.remove('tuto-hl');});
+}
+
 window.goTo=goTo; window.startJourney=startJourney; window.confirmAvatar=confirmAvatar;
 window.selectCharCat=selectCharCat; window.randomizeChar=randomizeChar; window.scrollCharCats=scrollCharCats;
 window.nav=nav; window.closeOv=closeOv; window.closeOverlay=closeOverlay;
@@ -1496,5 +1560,10 @@ function sfxAdvance(){playFx('correct');}
   tick();
 })();
 </script>
+
+<!-- TUTORIAL OVERLAY -->
+<div id="tutoOv"></div>
+<div id="tutoBubble"></div>
+<div id="tutoArrow"></div>
 </body>
 </html>
