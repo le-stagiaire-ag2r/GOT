@@ -839,21 +839,24 @@ function renderWP() {
       grp.appendChild(ic);
     }
 
-    if(wp.cross || isEnd || isStart){
-      var lbTxt = wp.n.replace(/ [0-9]+\/[0-9]+$/,"");
-      var lbBg=svgEl("rect");
-      var lbW = lbTxt.length*6.5+12;
-      lbBg.setAttribute("x",-lbW/2); lbBg.setAttribute("y",r+15);
-      lbBg.setAttribute("width",lbW); lbBg.setAttribute("height","15");
-      lbBg.setAttribute("fill","rgba(0,0,0,0.65)"); lbBg.setAttribute("rx","2");
-      grp.appendChild(lbBg);
-      var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",r+27);
-      lb.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#ffb080":"#90f090");
-      lb.setAttribute("font-size","11"); lb.setAttribute("font-family","Cinzel,serif");
-      lb.setAttribute("font-weight","600");
-      lb.textContent = lbTxt;
-      grp.appendChild(lb);
     }
+
+    var lbTxt = wp.n;
+    var above = i % 2 === 1;
+    var lbW = lbTxt.length*5.5+10;
+    var lbY = above ? -(r+26) : r+15;
+    var lbTY = above ? -(r+14) : r+27;
+    var lbBg=svgEl("rect");
+    lbBg.setAttribute("x",-lbW/2); lbBg.setAttribute("y",lbY);
+    lbBg.setAttribute("width",lbW); lbBg.setAttribute("height","14");
+    lbBg.setAttribute("fill","rgba(0,0,0,0.72)"); lbBg.setAttribute("rx","2");
+    grp.appendChild(lbBg);
+    var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",lbTY);
+    lb.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#ffb080":isStart?"#90f090":"#d4c090");
+    lb.setAttribute("font-size","9"); lb.setAttribute("font-family","Cinzel,serif");
+    lb.setAttribute("font-weight","600");
+    lb.textContent = lbTxt;
+    grp.appendChild(lb);
 
     g.appendChild(grp);
   });
