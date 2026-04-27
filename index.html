@@ -329,6 +329,9 @@ select.inp option{background:#0c0804;color:#f0ddb0}
         <select class="inp" id="adminMonth"></select>
         <button class="pbtn pbtn-g" onclick="setActiveMonth()" style="margin-top:4px">⚔ ACTIVER CE MOIS</button>
         <div class="psep"></div>
+        <button class="pbtn pbtn-r" onclick="resetQuestions()">✕ VIDER LES MOIS PUBLIÉS</button>
+        <div class="pmsg" id="adminMsg5"></div>
+        <div class="psep"></div>
         <button class="pbtn pbtn-r" onclick="resetSeason()">⚠ RÉINITIALISER LA SAISON</button>
       </div>
     </div>
@@ -398,19 +401,7 @@ var DEF_CFG={face:0,skin:2,costume:0,hair:1,hairCol:0,eyes:1,eyeCol:1,mouth:0,be
 var charCfg=Object.assign({},DEF_CFG);
 var charCatAct='skin';
 
-var QUESTIONS = [
-  {
-    month: "Avril 2025 — La Quete du Trone",
-    qs: [
-      {q:"Quelle maison gouverne le Nord depuis Winterfell ?",
-       opts:["Maison Stark","Maison Lannister","Maison Tully","Maison Bolton"],c:0,r:"Les Loups du Nord hurlent de joie !"},
-      {q:"Qui est surnomme le Regicide pour avoir tue le Roi Fou ?",
-       opts:["Ned Stark","Jaime Lannister","Stannis Baratheon","Tywin Lannister"],c:1,r:"Valar Morghulis — Victoire !"},
-      {q:"De quoi est forge l'Acier Valyrien ?",
-       opts:["Magie du feu et minerai rare","Acier trempe","Bronze et etain","Argent et obsidienne"],c:0,r:"Feu et sang — Excellente reponse !"}
-    ]
-  }
-];
+var QUESTIONS = [];
 
 var firebaseConfig = {
   apiKey: "AIzaSyCa9Gqtw03dVWI2PUXRbSmCi9h-XbYrH-k",
@@ -1029,7 +1020,7 @@ function closeOverlay(e){
 function buildQuest(){
   var mdata=QUESTIONS[curMonth];
   var noQ='<div class="ph"><div class="ph-t">📜 QUETE DU MOIS</div><button class="ph-c" onclick="closeOv()">✕</button></div>';
-  if(!mdata) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">Aucune quete disponible. Revenez bientot !</div></div>';
+  if(!mdata) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">⚔ Aucune quête publiée ce mois-ci.<br>Revenez bientôt !</div></div>';
   if(curQ>=mdata.qs.length) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">⚔ Toutes les epreuves de ce mois ont ete relevees !<br><br>Revenez le mois prochain.</div></div>';
   var q=mdata.qs[curQ];
   var nxt=WP[Math.min((ME?ME.pos:0)+1,24)];
@@ -1205,6 +1196,16 @@ async function adminAdvance(){
     populateAdminSel();
   }catch(e){document.getElementById("adminMsg3").textContent="Erreur.";}
 }
+async function resetQuestions(){
+  if(!confirm("Vider tous les mois publiés ? Les questions seront effacées de Firebase (les joueurs ne sont pas touchés)."))return;
+  try{
+    QUESTIONS=[];curMonth=0;curQ=0;monthScore=0;qAnswered=false;
+    await updateDoc(doc(db,'gameState','main'),{questions:[],curMonth:0});
+    populateMonthSel();
+    document.getElementById("adminMsg5").textContent="Mois effacés. Publiez de nouvelles questions.";
+    notify("Questions réinitialisées.");
+  }catch(e){document.getElementById("adminMsg5").textContent="Erreur : "+e.message;}
+}
 async function resetSeason(){
   if(!confirm("Réinitialiser toute la saison ?"))return;
   try{
@@ -1266,8 +1267,9 @@ startListeners();
 // ── MONTH RESUME ──
 function showMonthResume(){
   closeOv(); // ferme le panel quête avant d'afficher le résumé
-  var nQ=QUESTIONS[curMonth].qs.length;
-  var totalPossible=(curMonth+1)*nQ;
+  var nQ=QUESTIONS[curMonth]?QUESTIONS[curMonth].qs.length:0;
+  var totalPossible=0;
+  for(var m=0;m<=curMonth;m++){if(QUESTIONS[m])totalPossible+=QUESTIONS[m].qs.length;}
   var totalScore=ME?ME.pos:0;
   var pct=totalPossible>0?Math.round(totalScore/totalPossible*100):0;
   var barW=Math.min(100,pct);
@@ -1386,7 +1388,7 @@ window.answer=answer; window.nextQuestion=nextQuestion;
 window.checkAdmin=checkAdmin; window.addQuestion=addQuestion;
 window.removeDraftQ=removeDraftQ; window.refreshQPreview=refreshQPreview;
 window.publishQuest=publishQuest; window.setActiveMonth=setActiveMonth;
-window.adminAdvance=adminAdvance; window.deletePlayer=deletePlayer; window.resetSeason=resetSeason;
+window.adminAdvance=adminAdvance; window.deletePlayer=deletePlayer; window.resetSeason=resetSeason; window.resetQuestions=resetQuestions;
 window.populateStepSel=populateStepSel;
 window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window.showPlayersAt=showPlayersAt;
 window.toggleMute=toggleMute;
