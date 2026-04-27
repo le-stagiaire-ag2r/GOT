@@ -398,19 +398,7 @@ var DEF_CFG={face:0,skin:2,costume:0,hair:1,hairCol:0,eyes:1,eyeCol:1,mouth:0,be
 var charCfg=Object.assign({},DEF_CFG);
 var charCatAct='skin';
 
-var QUESTIONS = [
-  {
-    month: "Avril 2025 — La Quete du Trone",
-    qs: [
-      {q:"Quelle maison gouverne le Nord depuis Winterfell ?",
-       opts:["Maison Stark","Maison Lannister","Maison Tully","Maison Bolton"],c:0,r:"Les Loups du Nord hurlent de joie !"},
-      {q:"Qui est surnomme le Regicide pour avoir tue le Roi Fou ?",
-       opts:["Ned Stark","Jaime Lannister","Stannis Baratheon","Tywin Lannister"],c:1,r:"Valar Morghulis — Victoire !"},
-      {q:"De quoi est forge l'Acier Valyrien ?",
-       opts:["Magie du feu et minerai rare","Acier trempe","Bronze et etain","Argent et obsidienne"],c:0,r:"Feu et sang — Excellente reponse !"}
-    ]
-  }
-];
+var QUESTIONS = [];
 
 var firebaseConfig = {
   apiKey: "AIzaSyCa9Gqtw03dVWI2PUXRbSmCi9h-XbYrH-k",
@@ -1266,8 +1254,9 @@ startListeners();
 // ── MONTH RESUME ──
 function showMonthResume(){
   closeOv(); // ferme le panel quête avant d'afficher le résumé
-  var nQ=QUESTIONS[curMonth].qs.length;
-  var totalPossible=(curMonth+1)*nQ;
+  var nQ=QUESTIONS[curMonth]?QUESTIONS[curMonth].qs.length:0;
+  var totalPossible=0;
+  for(var m=0;m<=curMonth;m++){if(QUESTIONS[m])totalPossible+=QUESTIONS[m].qs.length;}
   var totalScore=ME?ME.pos:0;
   var pct=totalPossible>0?Math.round(totalScore/totalPossible*100):0;
   var barW=Math.min(100,pct);
