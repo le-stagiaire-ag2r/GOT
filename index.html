@@ -57,6 +57,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 .pbadge-av{width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .pbadge-name{font-family:'Cinzel',serif;font-size:11px;color:#c9a84c}
 .pbadge-pos{font-size:9px;color:#6a4e14}
+#recapBar{position:fixed;bottom:66px;left:12px;background:rgba(12,8,4,.88);border:1px solid #3a2808;padding:8px 14px;font-family:'Cinzel',serif;display:none;z-index:40;border-radius:2px;min-width:110px}
+#recapBar .rb-month{font-size:8px;color:#6a4e14;letter-spacing:2px;margin-bottom:3px}
+#recapBar .rb-score{font-size:18px;color:#f0d080;letter-spacing:1px;line-height:1}
+#recapBar .rb-sub{font-size:8px;color:#4a3010;letter-spacing:1px;margin-top:3px}
+#countdownBar{position:fixed;bottom:66px;right:12px;background:rgba(12,8,4,.88);border:1px solid #3a2808;padding:8px 14px;font-family:'Cinzel',serif;display:none;z-index:40;border-radius:2px;text-align:right}
+#countdownBar .cd-lbl{font-size:8px;color:#6a4e14;letter-spacing:2px;margin-bottom:3px}
+#countdownBar .cd-days{font-size:18px;color:#c9a84c;line-height:1}
+#countdownBar .cd-sub{font-size:8px;color:#4a3010;letter-spacing:1px;margin-top:3px}
 #bot{position:fixed;bottom:0;left:0;right:0;height:64px;background:transparent;border-top:1px solid rgba(74,48,16,.35);display:flex;align-items:center;padding:0 12px;gap:8px;overflow-x:auto;z-index:50}
 .chip{display:flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid #2a1a06;cursor:pointer;flex-shrink:0;transition:all .2s;background:rgba(4,3,1,.8)}
 .chip.me{border-color:#c9a84c !important;background:rgba(201,168,76,.12) !important}
@@ -126,6 +134,7 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .btn-sec:hover{border-color:#c9a84c;color:#c9a84c}
 /* ── RESUME MODAL ── */
 #resumeModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:400;align-items:center;justify-content:center}
+#annModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:700;align-items:center;justify-content:center}
 #resumeBox{max-width:360px;width:90%;background:#100a02;border:1px solid #c9a84c;padding:28px 24px;font-family:'Cinzel',serif;color:#e8d4a0;text-align:center}
 .rmo-title{font-size:11px;letter-spacing:3px;color:#c9a84c;margin-bottom:18px}
 .rmo-stars{font-size:30px;margin:8px 0 14px;letter-spacing:4px}
@@ -224,6 +233,16 @@ select.inp option{background:#0c0804;color:#f0ddb0}
       <button class="tb" id="muteBtn" onclick="toggleMute()" title="Musique">🔊</button>
       <div class="pbadge" id="myBadge"></div>
     </div>
+  </div>
+  <div id="recapBar">
+    <div class="rb-month" id="rbMonth">CE MOIS</div>
+    <div class="rb-score"><span id="rbScore">—</span></div>
+    <div class="rb-sub">BONNES RÉPONSES</div>
+  </div>
+  <div id="countdownBar">
+    <div class="cd-lbl">PROCHAIN MOIS</div>
+    <div class="cd-days" id="cdDays">—</div>
+    <div class="cd-sub">JOURS</div>
   </div>
   <div id="scene">
     <svg id="worldSvg" xmlns="http://www.w3.org/2000/svg" width="1280" height="1920">
@@ -331,6 +350,16 @@ select.inp option{background:#0c0804;color:#f0ddb0}
         <div class="psep"></div>
         <button class="pbtn pbtn-r" onclick="resetQuestions()">✕ VIDER LES MOIS PUBLIÉS</button>
         <div class="pmsg" id="adminMsg5"></div>
+        <div class="psep"></div>
+        <div class="plbl">MESSAGE AUX JOUEURS</div>
+        <textarea class="inp" id="annInput" placeholder="Ex : Les nouvelles quêtes d'avril sont disponibles !" style="height:65px;resize:vertical"></textarea>
+        <button class="pbtn pbtn-g" onclick="publishAnn()" style="margin-top:4px">📢 ENVOYER LE MESSAGE</button>
+        <div class="pmsg" id="adminMsg6"></div>
+        <div class="psep"></div>
+        <div class="plbl">DATE DU PROCHAIN MOIS</div>
+        <input class="inp" id="nextDateInput" type="date">
+        <button class="pbtn pbtn-g" onclick="saveNextDate()" style="margin-top:4px">📅 ENREGISTRER LA DATE</button>
+        <div class="pmsg" id="adminMsg7"></div>
         <div class="psep"></div>
         <button class="pbtn pbtn-r" onclick="resetSeason()">⚠ RÉINITIALISER LA SAISON</button>
       </div>
@@ -1055,6 +1084,7 @@ function answer(chosen){
     fb.innerHTML="🐦 Mauvaise réponse."+(defnTxt?"<br><br><span style='color:#c8aa6e;font-style:normal'>💡 "+defnTxt+"</span>":"")+"<br>"+nextBtn;
   }
   if(ME) savePlayer(nextQ);
+  updateRecap();
 }
 function nextQuestion(){
   sfxNext();
@@ -1219,6 +1249,51 @@ async function resetSeason(){
 function updateBadge(){
   if(!ME)return;
   document.getElementById("myBadge").innerHTML='<div class="pbadge-av">'+charSVGHtml(ME,32)+'</div><div><div class="pbadge-name">'+ME.name+'</div><div class="pbadge-pos">'+(ME.pos===0?'Départ':'Case '+ME.pos+'/24')+'</div></div>';
+  updateRecap();
+}
+function updateRecap(){
+  var bar=document.getElementById('recapBar');
+  if(!bar||!ME)return;
+  var mdata=QUESTIONS[curMonth];
+  var nQ=mdata?mdata.qs.length:0;
+  bar.style.display='block';
+  var mname=mdata?(mdata.month.split('—')[0].split('-')[0].trim().toUpperCase()):'CE MOIS';
+  document.getElementById('rbMonth').textContent=mname;
+  document.getElementById('rbScore').textContent=monthScore+' / '+nQ;
+}
+function updateCountdown(nextDate){
+  var el=document.getElementById('countdownBar');
+  if(!el||!nextDate)return;
+  var days=Math.ceil((new Date(nextDate)-new Date())/86400000);
+  if(days>0){el.style.display='block';document.getElementById('cdDays').textContent=days;}
+  else{el.style.display='none';}
+}
+function closeAnn(){document.getElementById('annModal').style.display='none';}
+function checkAnnouncement(data){
+  if(!data.announcement||!data.announcementTs)return;
+  var seen=localStorage.getItem('wc_seenAnn');
+  if(seen&&parseInt(seen)>=data.announcementTs)return;
+  document.getElementById('annText').textContent=data.announcement;
+  document.getElementById('annModal').style.display='flex';
+  localStorage.setItem('wc_seenAnn',String(data.announcementTs));
+}
+async function saveNextDate(){
+  var d=document.getElementById('nextDateInput').value;
+  if(!d){document.getElementById('adminMsg7').textContent="Choisissez une date.";return;}
+  try{
+    await updateDoc(doc(db,'gameState','main'),{nextDate:d});
+    document.getElementById('adminMsg7').textContent="Date enregistrée !";
+  }catch(e){document.getElementById('adminMsg7').textContent="Erreur.";}
+}
+async function publishAnn(){
+  var txt=document.getElementById('annInput').value.trim();
+  if(!txt){document.getElementById('adminMsg6').textContent="Écrivez un message.";return;}
+  var ts=Date.now();
+  try{
+    await updateDoc(doc(db,'gameState','main'),{announcement:txt,announcementTs:ts});
+    document.getElementById('adminMsg6').textContent="Message envoyé !";
+    document.getElementById('annInput').value='';
+  }catch(e){document.getElementById('adminMsg6').textContent="Erreur.";}
 }
 
 function notify(msg){var n=document.getElementById("notif");n.textContent=msg;n.classList.add("show");setTimeout(function(){n.classList.remove("show");},3500);}
@@ -1246,6 +1321,8 @@ function startListeners(){
         var prev=curMonth; curMonth=data.curMonth;
         if(prev!==curMonth){curQ=0;monthScore=0;qAnswered=false;}
       }
+      if(data.nextDate) updateCountdown(data.nextDate);
+      checkAnnouncement(data);
       if(document.getElementById("sAdmin").classList.contains("active"))populateMonthSel();
     }
   });
@@ -1387,6 +1464,7 @@ window.checkAdmin=checkAdmin; window.addQuestion=addQuestion;
 window.removeDraftQ=removeDraftQ; window.refreshQPreview=refreshQPreview;
 window.publishQuest=publishQuest; window.setActiveMonth=setActiveMonth;
 window.adminAdvance=adminAdvance; window.deletePlayer=deletePlayer; window.resetSeason=resetSeason; window.resetQuestions=resetQuestions;
+window.saveNextDate=saveNextDate; window.closeAnn=closeAnn; window.publishAnn=publishAnn;
 window.populateStepSel=populateStepSel;
 window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window.showPlayersAt=showPlayersAt;
 window.toggleMute=toggleMute;
@@ -1677,6 +1755,15 @@ clearTimeout(_loaderTimeout);
 <!-- RESUME MODAL -->
 <div id="resumeModal">
   <div id="resumeBox"></div>
+</div>
+
+<!-- ANNOUNCEMENT MODAL -->
+<div id="annModal">
+  <div style="background:#0c0804;border:1px solid #c9a84c;max-width:420px;width:90%;padding:28px 24px;font-family:'Cinzel',serif;text-align:center">
+    <div style="font-size:10px;color:#c9a84c;letter-spacing:3px;margin-bottom:18px">⚔ MESSAGE DU MAESTER ⚔</div>
+    <div id="annText" style="font-size:15px;color:#f0ddb0;line-height:1.75;margin-bottom:22px;font-style:italic"></div>
+    <button onclick="closeAnn()" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:10px 28px;border:1px solid #c9a84c;background:transparent;color:#c9a84c;cursor:pointer">FERMER ✕</button>
+  </div>
 </div>
 
 <!-- TUTORIAL OVERLAY -->
