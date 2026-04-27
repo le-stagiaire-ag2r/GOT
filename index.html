@@ -71,18 +71,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 #overlay.open{display:flex}
 .panel{background:#0c0804;border:1px solid #7a5c1e;width:480px;max-width:95vw;max-height:88vh;overflow-y:auto}
 .ph{background:#140e06;padding:13px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #3a2808;position:sticky;top:0;z-index:2}
-.ph-t{font-family:'Cinzel Decorative',serif;font-size:11px;color:#c9a84c;letter-spacing:2px}
+.ph-t{font-family:'Cinzel Decorative',serif;font-size:14px;color:#c9a84c;letter-spacing:2px}
 .ph-c{background:none;border:none;color:#7a5c1e;font-size:22px;cursor:pointer;line-height:1}.ph-c:hover{color:#c9a84c}
 .pb2{padding:20px}
-.plbl{font-family:'Cinzel',serif;font-size:9px;color:#6a4e14;letter-spacing:2px;margin-bottom:8px}
-.pq{font-size:15px;color:#f0ddb0;line-height:1.65;margin-bottom:18px;font-style:italic}
+.plbl{font-family:'Cinzel',serif;font-size:12px;color:#6a4e14;letter-spacing:2px;margin-bottom:8px}
+.pq{font-size:19px;color:#f0ddb0;line-height:1.65;margin-bottom:18px;font-style:italic}
 .opts{display:flex;flex-direction:column;gap:8px}
-.opt{background:transparent;border:1px solid #3a2808;color:#b89858;padding:10px 14px;font-family:'Cinzel',serif;font-size:11px;cursor:pointer;text-align:left;transition:all .2s;letter-spacing:.5px}
+.opt{background:transparent;border:1px solid #3a2808;color:#b89858;padding:12px 16px;font-family:'Cinzel',serif;font-size:14px;cursor:pointer;text-align:left;transition:all .2s;letter-spacing:.5px}
 .opt:hover:not(:disabled){border-color:#7a5c1e;background:rgba(201,168,76,.06);color:#f0d080}
 .opt.ok{border-color:#3a8a4a;background:rgba(30,100,50,.2);color:#70d880 !important;pointer-events:none}
 .opt.ko{border-color:#8b1a1a;background:rgba(120,20,20,.2);color:#d86060 !important;pointer-events:none}
 .opt:disabled{pointer-events:none}
-.pfb{margin-top:14px;padding:10px 14px;font-size:12px;font-style:italic;line-height:1.6;display:none;border-left:2px solid}
+.pfb{margin-top:14px;padding:10px 14px;font-size:15px;font-style:italic;line-height:1.6;display:none;border-left:2px solid}
 .pfb.show{display:block}
 .pfb.good{border-color:#3a8a4a;color:#70d880;background:rgba(30,100,50,.1)}
 .pfb.bad{border-color:#8b1a1a;color:#d86060;background:rgba(120,20,20,.1)}
@@ -792,7 +792,7 @@ function renderWP() {
     var done = ME && ME.pos > i;
     var isEnd = i===24;
     var isStart = i===0;
-    var r = isEnd?16 : isStart?11 : wp.cross?14 : 12;
+    var r = isEnd?20 : isStart?14 : wp.cross?17 : 15;
     var grp = svgEl("g");
     grp.setAttribute("transform","translate("+wp.x+","+wp.y+")");
     grp.style.cursor = "pointer";
@@ -832,7 +832,7 @@ function renderWP() {
       grp.appendChild(c);
 
       var ic=svgEl("text"); ic.setAttribute("text-anchor","middle"); ic.setAttribute("dominant-baseline","central");
-      ic.setAttribute("font-size",isEnd?"14":isStart?"10":"8");
+      ic.setAttribute("font-size",isEnd?"18":isStart?"13":"11");
       ic.setAttribute("fill",isEnd?"#f0d060":isStart?"#90f090":"#c8922a");
       ic.setAttribute("font-family","Cinzel,serif");
       ic.textContent = isEnd?"👑":isStart?"▶":i;
@@ -841,14 +841,14 @@ function renderWP() {
 
     var lbTxt = wp.n.replace(/ [0-9]+\/[0-9]+$/,"");
     var lbBg=svgEl("rect");
-    var lbW = lbTxt.length*5+8;
-    lbBg.setAttribute("x",-lbW/2); lbBg.setAttribute("y",r+13);
-    lbBg.setAttribute("width",lbW); lbBg.setAttribute("height","12");
+    var lbW = lbTxt.length*6.5+12;
+    lbBg.setAttribute("x",-lbW/2); lbBg.setAttribute("y",r+15);
+    lbBg.setAttribute("width",lbW); lbBg.setAttribute("height","15");
     lbBg.setAttribute("fill","rgba(0,0,0,0.65)"); lbBg.setAttribute("rx","2");
     grp.appendChild(lbBg);
-    var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",r+22);
+    var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",r+27);
     lb.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#ffb080":"#ffffff");
-    lb.setAttribute("font-size","8"); lb.setAttribute("font-family","Cinzel,serif");
+    lb.setAttribute("font-size","11"); lb.setAttribute("font-family","Cinzel,serif");
     lb.setAttribute("font-weight","600");
     lb.textContent = lbTxt;
     grp.appendChild(lb);
@@ -878,30 +878,30 @@ function renderPP() {
 
     if(single){
       // Halo blanc + ombre pour ressortir sur la carte
-      var shadow=svgEl("circle"); shadow.setAttribute("r","19");
+      var shadow=svgEl("circle"); shadow.setAttribute("r","23");
       shadow.setAttribute("fill","rgba(0,0,0,0.45)"); shadow.setAttribute("cx","1"); shadow.setAttribute("cy","2");
       grp.appendChild(shadow);
-      var bg=svgEl("circle"); bg.setAttribute("r","19");
+      var bg=svgEl("circle"); bg.setAttribute("r","23");
       bg.setAttribute("fill","#f5ead0"); bg.setAttribute("stroke","#c9a84c"); bg.setAttribute("stroke-width","1.5");
       grp.appendChild(bg);
       var img=svgEl("image");
-      img.setAttribute("href",charDataUri(group[0],34));
-      img.setAttribute("x","-17"); img.setAttribute("y","-17");
-      img.setAttribute("width","34"); img.setAttribute("height","34");
+      img.setAttribute("href",charDataUri(group[0],42));
+      img.setAttribute("x","-21"); img.setAttribute("y","-21");
+      img.setAttribute("width","42"); img.setAttribute("height","42");
       grp.appendChild(img);
     } else {
       // Plusieurs joueurs — badge doré avec compte
-      var shadow2=svgEl("circle"); shadow2.setAttribute("r","16");
+      var shadow2=svgEl("circle"); shadow2.setAttribute("r","20");
       shadow2.setAttribute("fill","rgba(0,0,0,0.45)"); shadow2.setAttribute("cx","1"); shadow2.setAttribute("cy","2");
       grp.appendChild(shadow2);
-      var bgM=svgEl("circle"); bgM.setAttribute("r","16");
+      var bgM=svgEl("circle"); bgM.setAttribute("r","20");
       bgM.setAttribute("fill",hasMe?"#3a2808":"#1a1008");
       bgM.setAttribute("stroke",hasMe?"#f0d080":"#c9a84c"); bgM.setAttribute("stroke-width","1.5");
       grp.appendChild(bgM);
       var label="×"+group.length;
       var count=svgEl("text"); count.setAttribute("text-anchor","middle"); count.setAttribute("dominant-baseline","central");
       count.setAttribute("font-family","Cinzel,serif"); count.setAttribute("font-weight","700");
-      count.setAttribute("font-size","12");
+      count.setAttribute("font-size","15");
       count.setAttribute("fill",hasMe?"#f0d080":"#c9a84c");
       count.textContent=label;
       grp.appendChild(count);
@@ -1029,7 +1029,7 @@ function buildQuest(){
   if(curQ>=mdata.qs.length) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">⚔ Toutes les epreuves de ce mois ont ete relevees !<br><br>Revenez le mois prochain.</div></div>';
   var q=mdata.qs[curQ];
   var nxt=WP[Math.min((ME?ME.pos:0)+1,24)];
-  return '<div class="ph"><div><div class="ph-t">📜 '+mdata.month+'</div><div style="font-family:Cinzel,serif;font-size:9px;color:#6a4e14;letter-spacing:1px;margin-top:3px">Question '+(curQ+1)+' / '+mdata.qs.length+'</div></div>'
+  return '<div class="ph"><div><div class="ph-t">📜 '+mdata.month+'</div><div style="font-family:Cinzel,serif;font-size:12px;color:#6a4e14;letter-spacing:1px;margin-top:3px">Question '+(curQ+1)+' / '+mdata.qs.length+'</div></div>'
     +'<button class="ph-c" onclick="closeOv()">✕</button></div>'
     +'<div class="pb2">'
     +'<div class="plbl">PROCHAINE ETAPE → '+nxt.n+'</div>'
@@ -1047,7 +1047,7 @@ function answer(chosen){
   var fb=document.getElementById("qfb");
   var isLast=(curQ>=QUESTIONS[curMonth].qs.length-1);
   var nextQ=isLast?QUESTIONS[curMonth].qs.length:curQ+1;
-  var nextBtn='<button onclick="'+(isLast?'showMonthResume()':'nextQuestion()')+'" style="width:100%;margin-top:12px;padding:10px;font-family:Cinzel,serif;font-size:10px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080">'+(isLast?"⚔ RÉSUMÉ DU MOIS":"QUESTION SUIVANTE →")+"</button>";
+  var nextBtn='<button onclick="'+(isLast?'showMonthResume()':'nextQuestion()')+'" style="width:100%;margin-top:12px;padding:12px;font-family:Cinzel,serif;font-size:13px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080">'+(isLast?"⚔ RÉSUMÉ DU MOIS":"QUESTION SUIVANTE →")+"</button>";
   if(chosen===q.c){
     sfxCorrect();
     monthScore++;
