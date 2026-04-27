@@ -1020,7 +1020,7 @@ function closeOverlay(e){
 function buildQuest(){
   var mdata=QUESTIONS[curMonth];
   var noQ='<div class="ph"><div class="ph-t">📜 QUETE DU MOIS</div><button class="ph-c" onclick="closeOv()">✕</button></div>';
-  if(!mdata) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">Aucune quete disponible. Revenez bientot !</div></div>';
+  if(!mdata) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">⚔ Aucune quête publiée ce mois-ci.<br>Revenez bientôt !</div></div>';
   if(curQ>=mdata.qs.length) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">⚔ Toutes les epreuves de ce mois ont ete relevees !<br><br>Revenez le mois prochain.</div></div>';
   var q=mdata.qs[curQ];
   var nxt=WP[Math.min((ME?ME.pos:0)+1,24)];
