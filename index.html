@@ -773,11 +773,12 @@ async function confirmAvatar() {
 }
 
 // ── SAVE PLAYER ──
-async function savePlayer(){
+async function savePlayer(savedCurQ){
   if(!ME) return;
   var pid = localStorage.getItem("wc_playerId");
   if(!pid) return;
-  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:curQ, monthScore:monthScore, lastMonth:curMonth}); }catch(e){}
+  var qIdx=(savedCurQ!==undefined)?savedCurQ:curQ;
+  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:qIdx, monthScore:monthScore, lastMonth:curMonth}); }catch(e){}
 }
 
 // ── SVG HELPER ──
@@ -1045,11 +1046,12 @@ function answer(chosen){
   document.querySelectorAll(".opt").forEach(function(b,i){b.disabled=true;if(i===q.c)b.classList.add("ok");else if(i===chosen)b.classList.add("ko");});
   var fb=document.getElementById("qfb");
   var isLast=(curQ>=QUESTIONS[curMonth].qs.length-1);
+  var nextQ=isLast?QUESTIONS[curMonth].qs.length:curQ+1;
   var nextBtn='<button onclick="'+(isLast?'showMonthResume()':'nextQuestion()')+'" style="width:100%;margin-top:12px;padding:10px;font-family:Cinzel,serif;font-size:10px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080">'+(isLast?"⚔ RÉSUMÉ DU MOIS":"QUESTION SUIVANTE →")+"</button>";
   if(chosen===q.c){
     sfxCorrect();
     monthScore++;
-    if(ME){ME.pos=Math.min(ME.pos+1,24); savePlayer();}
+    if(ME){ME.pos=Math.min(ME.pos+1,24);}
     document.getElementById("qprog").style.width=(monthScore/3*100)+"%";
     setTimeout(function(){refresh();updateBadge();},300);
     if(ME&&ME.pos===24)setTimeout(function(){notify("👑 "+ME.name+" atteint Battle of Winterfell !");},600);
@@ -1061,6 +1063,7 @@ function answer(chosen){
     fb.className="pfb show bad";
     fb.innerHTML="🐦 Mauvaise réponse."+(defnTxt?"<br><br><span style='color:#c8aa6e;font-style:normal'>💡 "+defnTxt+"</span>":"")+"<br>"+nextBtn;
   }
+  if(ME) savePlayer(nextQ);
 }
 function nextQuestion(){
   sfxNext();
