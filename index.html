@@ -77,7 +77,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 .plbl{font-family:'Cinzel',serif;font-size:12px;color:#6a4e14;letter-spacing:2px;margin-bottom:8px}
 .pq{font-size:19px;color:#f0ddb0;line-height:1.65;margin-bottom:18px;font-style:italic}
 .opts{display:flex;flex-direction:column;gap:8px}
-.opt{background:transparent;border:1px solid #3a2808;color:#b89858;padding:12px 16px;font-family:'Cinzel',serif;font-size:14px;cursor:pointer;text-align:left;transition:all .2s;letter-spacing:.5px}
+.opt{background:rgba(255,255,255,.04);border:1px solid #4a3010;color:#e8d4a0;padding:12px 16px;font-family:'Cinzel',serif;font-size:14px;cursor:pointer;text-align:left;transition:all .2s;letter-spacing:.5px}
 .opt:hover:not(:disabled){border-color:#7a5c1e;background:rgba(201,168,76,.06);color:#f0d080}
 .opt.ok{border-color:#3a8a4a;background:rgba(30,100,50,.2);color:#70d880 !important;pointer-events:none}
 .opt.ko{border-color:#8b1a1a;background:rgba(120,20,20,.2);color:#d86060 !important;pointer-events:none}
@@ -839,19 +839,21 @@ function renderWP() {
       grp.appendChild(ic);
     }
 
-    var lbTxt = wp.n.replace(/ [0-9]+\/[0-9]+$/,"");
-    var lbBg=svgEl("rect");
-    var lbW = lbTxt.length*6.5+12;
-    lbBg.setAttribute("x",-lbW/2); lbBg.setAttribute("y",r+15);
-    lbBg.setAttribute("width",lbW); lbBg.setAttribute("height","15");
-    lbBg.setAttribute("fill","rgba(0,0,0,0.65)"); lbBg.setAttribute("rx","2");
-    grp.appendChild(lbBg);
-    var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",r+27);
-    lb.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#ffb080":"#ffffff");
-    lb.setAttribute("font-size","11"); lb.setAttribute("font-family","Cinzel,serif");
-    lb.setAttribute("font-weight","600");
-    lb.textContent = lbTxt;
-    grp.appendChild(lb);
+    if(wp.cross || isEnd || isStart){
+      var lbTxt = wp.n.replace(/ [0-9]+\/[0-9]+$/,"");
+      var lbBg=svgEl("rect");
+      var lbW = lbTxt.length*6.5+12;
+      lbBg.setAttribute("x",-lbW/2); lbBg.setAttribute("y",r+15);
+      lbBg.setAttribute("width",lbW); lbBg.setAttribute("height","15");
+      lbBg.setAttribute("fill","rgba(0,0,0,0.65)"); lbBg.setAttribute("rx","2");
+      grp.appendChild(lbBg);
+      var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",r+27);
+      lb.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#ffb080":"#90f090");
+      lb.setAttribute("font-size","11"); lb.setAttribute("font-family","Cinzel,serif");
+      lb.setAttribute("font-weight","600");
+      lb.textContent = lbTxt;
+      grp.appendChild(lb);
+    }
 
     g.appendChild(grp);
   });
@@ -890,19 +892,12 @@ function renderPP() {
       img.setAttribute("width","42"); img.setAttribute("height","42");
       grp.appendChild(img);
     } else {
-      // Plusieurs joueurs — badge doré avec compte
-      var shadow2=svgEl("circle"); shadow2.setAttribute("r","20");
-      shadow2.setAttribute("fill","rgba(0,0,0,0.45)"); shadow2.setAttribute("cx","1"); shadow2.setAttribute("cy","2");
-      grp.appendChild(shadow2);
-      var bgM=svgEl("circle"); bgM.setAttribute("r","20");
-      bgM.setAttribute("fill",hasMe?"#3a2808":"#1a1008");
-      bgM.setAttribute("stroke",hasMe?"#f0d080":"#c9a84c"); bgM.setAttribute("stroke-width","1.5");
-      grp.appendChild(bgM);
       var label="×"+group.length;
       var count=svgEl("text"); count.setAttribute("text-anchor","middle"); count.setAttribute("dominant-baseline","central");
       count.setAttribute("font-family","Cinzel,serif"); count.setAttribute("font-weight","700");
-      count.setAttribute("font-size","15");
+      count.setAttribute("font-size","18");
       count.setAttribute("fill",hasMe?"#f0d080":"#c9a84c");
+      count.setAttribute("filter","drop-shadow(0 1px 3px rgba(0,0,0,0.9))");
       count.textContent=label;
       grp.appendChild(count);
     }
