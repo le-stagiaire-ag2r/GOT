@@ -18,7 +18,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 .bbody{padding:24px}
 .bfoot{padding:18px 24px;border-top:1px solid #3a2808;text-align:center}
 .rule-item{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start}
-.ri{font-size:26px;flex-shrink:0;width:36px;text-align:center}
+.ri{font-size:26px;flex-shrink:0;width:36px;text-align:center;filter:drop-shadow(0 0 6px rgba(201,168,76,0.5))}
 .rt h3{font-family:'Cinzel',serif;font-size:12px;color:#c9a84c;letter-spacing:1px;margin-bottom:4px}
 .rt p{font-size:13px;color:#c8aa6e;line-height:1.6}
 #sAvatar{}
@@ -58,9 +58,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 .pbadge-name{font-family:'Cinzel',serif;font-size:11px;color:#c9a84c}
 .pbadge-pos{font-size:9px;color:#6a4e14}
 #recapBar{position:fixed;bottom:66px;left:12px;background:rgba(12,8,4,.88);border:1px solid #3a2808;padding:8px 14px;font-family:'Cinzel',serif;display:none;z-index:40;border-radius:2px;min-width:110px}
-#recapBar .rb-month{font-size:8px;color:#6a4e14;letter-spacing:2px;margin-bottom:3px}
+#recapBar .rb-month{font-size:9px;color:#9a7a30;letter-spacing:2px;margin-bottom:3px}
 #recapBar .rb-score{font-size:18px;color:#f0d080;letter-spacing:1px;line-height:1}
-#recapBar .rb-sub{font-size:8px;color:#4a3010;letter-spacing:1px;margin-top:3px}
+#recapBar .rb-sub{font-size:9px;color:#9a7a30;letter-spacing:1px;margin-top:3px}
 #countdownBar{position:fixed;bottom:66px;right:12px;background:rgba(12,8,4,.88);border:1px solid #3a2808;padding:8px 14px;font-family:'Cinzel',serif;display:none;z-index:40;border-radius:2px;text-align:right}
 #countdownBar .cd-lbl{font-size:8px;color:#6a4e14;letter-spacing:2px;margin-bottom:3px}
 #countdownBar .cd-days{font-size:18px;color:#c9a84c;line-height:1}
@@ -151,12 +151,12 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .rmo-close:hover{background:rgba(201,168,76,.12);color:#f0d080}
 /* ── TUTORIAL ── */
 #tutoOv{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.74);z-index:500;pointer-events:none}
-#tutoBubble{display:none;position:fixed;max-width:300px;min-width:230px;background:#140d04;border:1px solid #c9a84c;padding:20px;font-family:'Cinzel',serif;color:#e8d4a0;font-size:12px;line-height:1.75;z-index:505;box-shadow:0 8px 32px rgba(0,0,0,0.9);border-radius:2px}
+#tutoBubble{display:none;position:fixed;max-width:340px;min-width:270px;background:#140d04;border:1px solid #c9a84c;padding:24px;font-family:'Cinzel',serif;color:#e8d4a0;font-size:14px;line-height:1.8;z-index:505;box-shadow:0 8px 32px rgba(0,0,0,0.9);border-radius:2px}
 #tutoBubble strong{color:#f0d080}
-.tuto-hint{display:block;color:#c9a84c;font-size:10px;margin-top:12px;text-align:center;letter-spacing:1.5px;animation:tblink 1.2s infinite}
+.tuto-hint{display:block;color:#c9a84c;font-size:12px;margin-top:12px;text-align:center;letter-spacing:1.5px;animation:tblink 1.2s infinite}
 @keyframes tblink{0%,100%{opacity:1}50%{opacity:0.35}}
-.tuto-prog{text-align:right;font-size:9px;color:#4a3010;margin-top:10px;letter-spacing:1px}
-.tuto-btn{display:block;width:100%;margin-top:14px;padding:10px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;background:transparent;border:1px solid #c9a84c;color:#c9a84c;cursor:pointer;transition:all .2s}
+.tuto-prog{text-align:right;font-size:11px;color:#8a6a28;margin-top:10px;letter-spacing:1px}
+.tuto-btn{display:block;width:100%;margin-top:14px;padding:12px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;background:transparent;border:1px solid #c9a84c;color:#c9a84c;cursor:pointer;transition:all .2s}
 .tuto-btn:hover{background:rgba(201,168,76,.12);color:#f0d080}
 .tuto-hl{outline:2px solid #c9a84c;outline-offset:4px;animation:tpulse 1.4s infinite}
 @keyframes tpulse{0%,100%{outline-color:#c9a84c;box-shadow:0 0 10px rgba(201,168,76,.5)}50%{outline-color:#f0d080;box-shadow:0 0 22px rgba(240,208,128,.85)}}
@@ -182,10 +182,10 @@ select.inp option{background:#0c0804;color:#f0ddb0}
       <div class="bsub">QUÊTE COMMERCIALE · SAISON I</div>
     </div>
     <div class="bbody">
-      <div class="rule-item"><div class="ri">🗺</div><div class="rt"><h3>LA CARTE</h3><p>24 étapes vous séparent de King's Landing jusqu'au Wall. Chaque bonne réponse vous fait avancer d'une case.</p></div></div>
+      <div class="rule-item"><div class="ri">🗺️</div><div class="rt"><h3>LA CARTE</h3><p>24 étapes vous séparent de King's Landing jusqu'au Wall. Chaque bonne réponse vous fait avancer d'une case.</p></div></div>
       <div class="rule-item"><div class="ri">📜</div><div class="rt"><h3>QUÊTES MENSUELLES</h3><p>Chaque mois, 3 nouvelles questions sont publiées. Répondez correctement pour avancer de 1 à 3 cases.</p></div></div>
       <div class="rule-item"><div class="ri">👥</div><div class="rt"><h3>COMPÉTITION EN LIVE</h3><p>Voyez en temps réel où se trouvent vos collègues sur la carte. Le premier à Battle of Winterfell remporte la saison !</p></div></div>
-      <div class="rule-item"><div class="ri">✕</div><div class="rt"><h3>CHECKPOINTS</h3><p>Tous les 3 cases, une croix marque une étape clé correspondant à une zone de Westeros.</p></div></div>
+      <div class="rule-item"><div class="ri">✖️</div><div class="rt"><h3>CHECKPOINTS</h3><p>Tous les 3 cases, une croix marque une étape clé correspondant à une zone de Westeros.</p></div></div>
     </div>
     <div class="bfoot"><button class="btn-main" onclick="startJourney()">CHOISIR MON AVATAR ⚔</button></div>
   </div>
