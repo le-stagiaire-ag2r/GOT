@@ -111,6 +111,15 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .admin-wrap{max-width:540px;width:94%;margin:0 auto}
 #notif{position:fixed;top:58px;left:50%;transform:translateX(-50%) translateY(-14px);background:#0c0804;border:1px solid #c9a84c;padding:8px 22px;font-family:'Cinzel',serif;font-size:11px;color:#c9a84c;letter-spacing:1px;z-index:80;opacity:0;transition:all .4s;pointer-events:none;white-space:nowrap}
 #notif.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;background:#070f1e;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .5s}
+#loader.fade{opacity:0;pointer-events:none}
+.ld-title{font-family:'Cinzel',serif;font-size:18px;letter-spacing:4px;color:#c9a84c}
+.ld-sub{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:#4a3010}
+.ld-spin{width:40px;height:40px;border:2px solid #2a1808;border-top:2px solid #c9a84c;border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-err{font-family:'Cinzel',serif;font-size:11px;color:#c03030;letter-spacing:1px;display:none;text-align:center}
+.ld-retry{display:none;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:10px 24px;border:1px solid #c9a84c;background:transparent;color:#c9a84c;cursor:pointer;margin-top:8px}
 .btn-main{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:12px 32px;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080;cursor:pointer;transition:all .3s}
 .btn-main:hover{background:rgba(201,168,76,.25)}
 .btn-sec{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:10px 24px;border:1px solid #6a4e14;background:transparent;color:#8a6a38;cursor:pointer;transition:all .3s}
@@ -146,6 +155,13 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 </style>
 </head>
 <body>
+<div id="loader">
+  <div class="ld-title">⚔ WESTEROS CONQUEST</div>
+  <div class="ld-spin"></div>
+  <div class="ld-sub">CHARGEMENT EN COURS…</div>
+  <div class="ld-err" id="ldErr">Impossible de joindre le serveur.<br>Vérifie ta connexion.</div>
+  <button class="ld-retry" id="ldRetry" onclick="location.reload()">↺ RÉESSAYER</button>
+</div>
 <canvas id="bgCanvas"></canvas>
 <div id="vignette"></div>
 
@@ -424,7 +440,23 @@ function genUUID(){
 }
 
 // ── SCREENS ──
+function hideLoader(){
+  var l=document.getElementById('loader');
+  if(l&&!l.classList.contains('fade')){l.classList.add('fade');setTimeout(function(){l.style.display='none';},520);}
+}
+var _loaderTimeout=setTimeout(function(){
+  var l=document.getElementById('loader');
+  if(l&&l.style.display!=='none'){
+    document.getElementById('ldErr').style.display='block';
+    document.getElementById('ldRetry').style.display='inline-block';
+    l.querySelector('.ld-spin').style.display='none';
+    l.querySelector('.ld-sub').style.display='none';
+  }
+},10000);
+
 function goTo(id) {
+  hideLoader();
+  clearTimeout(_loaderTimeout);
   document.querySelectorAll(".screen").forEach(function(s){
     s.classList.remove("active");
     s.style.display = "none";
