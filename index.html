@@ -839,21 +839,17 @@ function renderWP() {
       grp.appendChild(ic);
     }
 
-    if(wp.cross || isEnd || isStart){
-      var lbTxt = wp.n.replace(/ [0-9]+\/[0-9]+$/,"");
-      var lbW = lbTxt.length*5+8;
-      var lbBg=svgEl("rect");
-      lbBg.setAttribute("x",-lbW/2); lbBg.setAttribute("y",r+13);
-      lbBg.setAttribute("width",lbW); lbBg.setAttribute("height","12");
-      lbBg.setAttribute("fill","rgba(0,0,0,0.65)"); lbBg.setAttribute("rx","2");
-      grp.appendChild(lbBg);
-      var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",r+22);
-      lb.setAttribute("fill",isEnd?"#f0d060":wp.cross?"#ffb080":"#90f090");
-      lb.setAttribute("font-size","8"); lb.setAttribute("font-family","Cinzel,serif");
-      lb.setAttribute("font-weight","600");
-      lb.textContent = lbTxt;
-      grp.appendChild(lb);
-    }
+    var lb=svgEl("text"); lb.setAttribute("text-anchor","middle"); lb.setAttribute("y",r+20);
+    lb.setAttribute("fill","#ffffff");
+    lb.setAttribute("font-size","10"); lb.setAttribute("font-family","Cinzel,serif");
+    lb.setAttribute("font-weight","400");
+    lb.setAttribute("text-rendering","optimizeLegibility");
+    lb.setAttribute("paint-order","stroke");
+    lb.setAttribute("stroke","rgba(0,0,0,0.8)");
+    lb.setAttribute("stroke-width","3");
+    lb.setAttribute("stroke-linejoin","round");
+    lb.textContent = wp.n;
+    grp.appendChild(lb);
 
     g.appendChild(grp);
   });
