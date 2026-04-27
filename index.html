@@ -360,8 +360,8 @@ var WP = [
   {n:"Dragonstone 1/3",           x:914, y:1261, cross:false},
   {n:"Dragonstone 2/3",           x:885, y:1334, cross:false},
   {n:"Dragonstone 3/3",           x:786, y:1460, cross:true},
-  {n:"Plain of Mountains 1/3",    x:623, y:1492, cross:false},
-  {n:"Plain of Mountains 2/3",    x:548, y:1442, cross:false},
+  {n:"Storm's End 1/3",           x:623, y:1492, cross:false},
+  {n:"Storm's End 2/3",           x:548, y:1442, cross:false},
   {n:"Highgarden",                x:483, y:1398, cross:true},
   {n:"Highgarden 1/3",            x:517, y:1336, cross:false},
   {n:"Highgarden 2/3",            x:553, y:1285, cross:false},
@@ -470,6 +470,10 @@ async function startJourney() {
       if(snap.exists()){
         var data = snap.data();
         ME = {id:pid, name:data.name, avatarCfg:data.avatarCfg||null, avatar:data.avatar||null, pos:data.pos, col:data.col, brd:data.brd};
+        if(typeof data.lastMonth==='number' && data.lastMonth===curMonth){
+          curQ=typeof data.curQ==='number'?data.curQ:0;
+          monthScore=typeof data.monthScore==='number'?data.monthScore:0;
+        }
         updateBadge();
         goTo("sGame");
         resetView();
@@ -773,7 +777,7 @@ async function savePlayer(){
   if(!ME) return;
   var pid = localStorage.getItem("wc_playerId");
   if(!pid) return;
-  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos}); }catch(e){}
+  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:curQ, monthScore:monthScore, lastMonth:curMonth}); }catch(e){}
 }
 
 // ── SVG HELPER ──
