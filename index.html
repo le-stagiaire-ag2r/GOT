@@ -499,7 +499,9 @@ async function startJourney() {
       if(snap.exists()){
         var data = snap.data();
         ME = {id:pid, name:data.name, avatarCfg:data.avatarCfg||null, avatar:data.avatar||null, pos:data.pos, col:data.col, brd:data.brd};
-        if(typeof data.lastMonth==='number' && data.lastMonth===curMonth){
+        var curMName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
+        var sameMonth=(curMName&&data.lastMonthName===curMName)||(typeof data.lastMonth==='number'&&data.lastMonth===curMonth&&!data.lastMonthName);
+        if(sameMonth){
           curQ=typeof data.curQ==='number'?data.curQ:0;
           monthScore=typeof data.monthScore==='number'?data.monthScore:0;
         }
@@ -807,7 +809,8 @@ async function savePlayer(savedCurQ){
   var pid = localStorage.getItem("wc_playerId");
   if(!pid) return;
   var qIdx=(savedCurQ!==undefined)?savedCurQ:curQ;
-  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:qIdx, monthScore:monthScore, lastMonth:curMonth}); }catch(e){}
+  var mName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
+  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:qIdx, monthScore:monthScore, lastMonth:curMonth, lastMonthName:mName}); }catch(e){}
 }
 
 // ── SVG HELPER ──
