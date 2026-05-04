@@ -171,6 +171,13 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 @keyframes flashFade{0%{opacity:0.45}100%{opacity:0}}
 .throw-btn{display:block;width:100%;margin-top:8px;padding:8px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:rgba(200,80,40,.15);border:1px solid #c85028;color:#f08060;cursor:pointer;transition:all .2s}
 .throw-btn:hover{background:rgba(200,80,40,.3);color:#f0d080}
+#tomatoToast{display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:1100;background:#1a0c04;border:1px solid #c85028;color:#f08060;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1.5px;padding:10px 22px;border-radius:2px;box-shadow:0 4px 20px rgba(0,0,0,0.8);white-space:nowrap;pointer-events:none}
+@keyframes toastIn{0%{opacity:0;transform:translateX(-50%) translateY(12px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{0%{opacity:1}100%{opacity:0}}
+.ptimer-wrap{margin:10px 0 4px;display:flex;align-items:center;gap:8px}
+.ptimer-bar{flex:1;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+.ptimer-fill{height:100%;width:100%;background:#c9a84c;border-radius:3px;transition:width 1s linear,background .5s}
+.ptimer-lbl{font-family:'Cinzel',serif;font-size:11px;color:#c9a84c;letter-spacing:1px;min-width:30px;text-align:right}
 </style>
 </head>
 <body>
@@ -461,6 +468,7 @@ var qAnswered = false;
 var monthScore = 0;
 var playerMonthProgress = {};
 var questLocked = false;
+var _qTimer=null, _qTimeLeft=90, _qTimeUsed=0;
 var scale = 1, panX = 0, panY = 0;
 var drag = false, sx = 0, sy = 0, spx = 0, spy = 0;
 var COLORS = ["#3a78cc","#b03535","#c88018","#406890","#7a5018","#7a4888","#2a8858","#885020","#305888","#804080","#508840","#886040"];
@@ -516,6 +524,7 @@ async function startJourney() {
         if(sameMonth){
           curQ=typeof data.curQ==='number'?data.curQ:0;
           monthScore=typeof data.monthScore==='number'?data.monthScore:0;
+          _qTimeUsed=typeof data.monthTime==='number'?data.monthTime:0;
         }
         if(curMName)playerMonthProgress[curMName]={curQ:curQ,monthScore:monthScore};
         updateBadge();
@@ -823,7 +832,7 @@ async function savePlayer(savedCurQ){
   if(!pid) return;
   var qIdx=(savedCurQ!==undefined)?savedCurQ:curQ;
   var mName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
-  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:qIdx, monthScore:monthScore, lastMonth:curMonth, lastMonthName:mName, tomatoes:ME.tomatoes||0}); }catch(e){}
+  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:qIdx, monthScore:monthScore, lastMonth:curMonth, lastMonthName:mName, tomatoes:ME.tomatoes||0, monthTime:_qTimeUsed}); }catch(e){}
 }
 
 // ── SVG HELPER ──
@@ -1027,14 +1036,27 @@ async function throwTomato(targetId, targetName){
   notify('🍅 Tomate lancée sur '+targetName+' !');
   updateBadge();
 }
+function showTomatoToast(msg){
+  var t=document.getElementById('tomatoToast');
+  t.textContent=msg;
+  t.style.display='block';
+  t.style.animation='none';
+  void t.offsetWidth;
+  t.style.animation='toastIn 0.3s ease-out forwards';
+  clearTimeout(t._hideTimer);
+  t._hideTimer=setTimeout(function(){
+    t.style.animation='toastOut 0.4s ease-in forwards';
+    setTimeout(function(){t.style.display='none';},400);
+  },3200);
+}
 function showTomatoSplat(fromName){
   sfxSplat();
   var W=window.innerWidth,H=window.innerHeight;
-  var cx=W*(0.2+Math.random()*0.6), cy=H*(0.07+Math.random()*0.3), r=50+Math.random()*38;
+  var cx=W*(0.25+Math.random()*0.5), cy=H*(0.08+Math.random()*0.25), r=32+Math.random()*20;
   var el=document.getElementById('tomatoSplat');
   el.innerHTML='';
   var flash=document.createElement('div');
-  flash.style.cssText='position:absolute;inset:0;background:rgba(200,35,5,0.3);animation:flashFade 0.22s ease-out forwards';
+  flash.style.cssText='position:absolute;inset:0;background:rgba(200,35,5,0.2);animation:flashFade 0.18s ease-out forwards';
   el.appendChild(flash);
   var wrap=document.createElement('div');
   wrap.style.cssText='position:absolute;inset:0;animation:splatSlideDown 4s 0.5s ease-in forwards';
@@ -1043,31 +1065,31 @@ function showTomatoSplat(fromName){
     +'border-radius:50%;background:radial-gradient(circle at 38% 35%,#ff5535 0%,#cc1e00 45%,#8b1400 80%,rgba(70,5,0,0.25) 100%);'
     +'animation:splatIn 0.2s ease-out forwards';
   wrap.appendChild(splat);
-  for(var j=0;j<6+Math.floor(Math.random()*5);j++){
-    var ang=Math.random()*Math.PI*2, dist=r*(1.05+Math.random()*0.95), sw=3+Math.random()*9;
+  for(var j=0;j<4+Math.floor(Math.random()*3);j++){
+    var ang=Math.random()*Math.PI*2, dist=r*(0.9+Math.random()*0.6), sw=2+Math.random()*5;
     var seed=document.createElement('div');
     seed.style.cssText='position:absolute;left:'+(cx+Math.cos(ang)*dist-sw/2)+'px;top:'+(cy+Math.sin(ang)*dist*0.55-sw/2)+'px;'
       +'width:'+sw+'px;height:'+sw+'px;border-radius:50%;background:#cc1e00;opacity:0.85;'
       +'animation:splatIn 0.28s '+(Math.random()*110)+'ms ease-out forwards';
     wrap.appendChild(seed);
   }
-  for(var i=0;i<10+Math.floor(Math.random()*6);i++){
-    var angle=(Math.random()-0.3)*1.15;
-    var dw=4+Math.random()*10, dh=28+Math.random()*95;
-    var dx2=cx+Math.sin(angle)*r*(0.15+Math.random()*0.85)-dw/2;
-    var dy2=cy+Math.abs(Math.cos(angle))*r*0.55;
+  for(var i=0;i<5+Math.floor(Math.random()*3);i++){
+    var angle=(Math.random()-0.3)*0.9;
+    var dw=3+Math.random()*6, dh=18+Math.random()*55;
+    var dx2=cx+Math.sin(angle)*r*(0.1+Math.random()*0.7)-dw/2;
+    var dy2=cy+Math.abs(Math.cos(angle))*r*0.5;
     var drip=document.createElement('div');
     drip.style.cssText='position:absolute;left:'+dx2+'px;top:'+dy2+'px;width:'+dw+'px;height:0;'
       +'background:linear-gradient(to bottom,#cc1e00 0%,rgba(130,12,0,0.55) 65%,transparent 100%);'
       +'border-radius:0 0 '+(dw/2)+'px '+(dw/2)+'px;'
-      +'animation:dripGrow '+(850+Math.random()*1300)+'ms '+(120+Math.random()*550)+'ms ease-in forwards;'
+      +'animation:dripGrow '+(700+Math.random()*900)+'ms '+(100+Math.random()*400)+'ms ease-in forwards;'
       +'--dh:'+dh+'px';
     wrap.appendChild(drip);
   }
   el.appendChild(wrap);
   el.style.display='block';
-  notify('🍅 '+fromName+' t\'a lancé une tomate !');
-  setTimeout(function(){el.style.display='none';},6000);
+  showTomatoToast('🍅 '+fromName+' t\'a lancé une tomate !');
+  setTimeout(function(){el.style.display='none';},5500);
 }
 
 // ── RENDER BAR ──
@@ -1145,8 +1167,10 @@ function confirmQuest(go){
   document.getElementById('bMap').disabled=true;
   document.getElementById('bLb').disabled=true;
   nav('Quest');
+  setTimeout(startQTimer,350);
 }
 function unlockQuest(){
+  stopQTimer();
   questLocked=false;
   document.getElementById('bMap').disabled=false;
   document.getElementById('bLb').disabled=false;
@@ -1180,6 +1204,34 @@ function closeOverlay(e){
   if(e.target===document.getElementById("overlay")) closeOv();
 }
 
+// ── QUEST TIMER ──
+function _updateTimerUI(){
+  var fill=document.getElementById('qtimerFill');
+  var lbl=document.getElementById('qtimerLbl');
+  if(!fill||!lbl)return;
+  var pct=Math.max(0,_qTimeLeft/90*100);
+  fill.style.width=pct+'%';
+  fill.style.background=_qTimeLeft<=15?'#c03030':_qTimeLeft<=30?'#c87020':'#c9a84c';
+  lbl.textContent=_qTimeLeft+'s';
+}
+function startQTimer(){
+  stopQTimer();
+  _qTimeLeft=90;
+  _updateTimerUI();
+  _qTimer=setInterval(function(){
+    _qTimeLeft=Math.max(0,_qTimeLeft-1);
+    _qTimeUsed++;
+    _updateTimerUI();
+    if(_qTimeLeft<=0){
+      clearInterval(_qTimer);_qTimer=null;
+      answer(-1);
+    }
+  },1000);
+}
+function stopQTimer(){
+  if(_qTimer){clearInterval(_qTimer);_qTimer=null;}
+}
+
 // ── QUEST ──
 function buildQuest(){
   var mdata=QUESTIONS[curMonth];
@@ -1193,6 +1245,7 @@ function buildQuest(){
   return '<div class="ph"><div><div class="ph-t">📜 '+mdata.month+'</div><div style="font-family:Cinzel,serif;font-size:12px;color:#6a4e14;letter-spacing:1px;margin-top:3px">Question '+(curQ+1)+' / '+mdata.qs.length+'</div></div>'
     +(questLocked?lockIcon:closeBtn)+'</div>'
     +'<div class="pb2">'
+    +'<div class="ptimer-wrap"><div class="ptimer-bar"><div class="ptimer-fill" id="qtimerFill"></div></div><div class="ptimer-lbl" id="qtimerLbl">90s</div></div>'
     +'<div class="plbl">PROCHAINE ETAPE → '+nxt.n+'</div>'
     +'<div class="pq">'+q.q+'</div>'
     +'<div class="opts" id="qopts">'+q.opts.map(function(o,i){return '<button class="opt" onclick="answer('+i+')">'+String.fromCharCode(65+i)+'. '+o+'</button>';}).join("")+'</div>'
@@ -1203,13 +1256,18 @@ function buildQuest(){
 
 function answer(chosen){
   if(qAnswered)return; qAnswered=true;
+  stopQTimer();
   var q=QUESTIONS[curMonth].qs[curQ];
   document.querySelectorAll(".opt").forEach(function(b,i){b.disabled=true;if(i===q.c)b.classList.add("ok");else if(i===chosen)b.classList.add("ko");});
   var fb=document.getElementById("qfb");
   var isLast=(curQ>=QUESTIONS[curMonth].qs.length-1);
   var nextQ=isLast?QUESTIONS[curMonth].qs.length:curQ+1;
   var nextBtn='<button onclick="'+(isLast?'showMonthResume()':'nextQuestion()')+'" style="width:100%;margin-top:12px;padding:12px;font-family:Cinzel,serif;font-size:13px;letter-spacing:2px;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,.12);color:#f0d080">'+(isLast?"⚔ RÉSUMÉ DU MOIS":"QUESTION SUIVANTE →")+"</button>";
-  if(chosen===q.c){
+  if(chosen===-1){
+    sfxWrong();
+    fb.className="pfb show bad";
+    fb.innerHTML="⏱ Temps écoulé !"+"<br>"+nextBtn;
+  } else if(chosen===q.c){
     sfxCorrect();
     monthScore++;
     if(ME) ME.tomatoes=(ME.tomatoes||0)+1;
@@ -1237,6 +1295,7 @@ function nextQuestion(){
     curQ++; qAnswered=false;
   }
   document.getElementById("panel").innerHTML=buildQuest();
+  startQTimer();
 }
 
 // ── LEADERBOARD ──
@@ -1474,7 +1533,7 @@ function startListeners(){
       if(typeof data.curMonth==='number'){
         var prev=curMonth; curMonth=data.curMonth;
         if(prev!==curMonth){
-          curQ=0;monthScore=0;qAnswered=false;
+          curQ=0;monthScore=0;qAnswered=false;_qTimeUsed=0;
           var newMName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
           if(newMName&&playerMonthProgress[newMName]){curQ=playerMonthProgress[newMName].curQ;monthScore=playerMonthProgress[newMName].monthScore;}
         }
@@ -1928,6 +1987,7 @@ clearTimeout(_loaderTimeout);
 </div>
 <div id="tomatoThrow"></div>
 <div id="tomatoSplat"></div>
+<div id="tomatoToast"></div>
 <div id="annModal">
   <div style="background:#0c0804;border:1px solid #c9a84c;max-width:420px;width:90%;padding:28px 24px;font-family:'Cinzel',serif;text-align:center">
     <div style="font-size:10px;color:#c9a84c;letter-spacing:3px;margin-bottom:18px">⚔ MESSAGE DU MAESTER ⚔</div>
