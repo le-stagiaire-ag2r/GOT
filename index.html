@@ -980,7 +980,7 @@ function renderBar() {
   var qb = document.createElement("div"); qb.className="chip";
   qb.style.cssText="border-color:#c8922a;background:rgba(200,146,42,.1);margin-left:auto;flex-shrink:0";
   qb.innerHTML='<div class="cav">📜</div><div><div class="cn" style="color:#c8922a">QUETE</div><div class="cl">Ce mois-ci</div></div>';
-  qb.onclick=function(){nav("Quest");};
+  qb.onclick=function(){tryOpenQuest();};
   bar.appendChild(qb);
 }
 
