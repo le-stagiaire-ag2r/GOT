@@ -162,11 +162,13 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .tuto-hl{outline:2px solid #c9a84c;outline-offset:4px;animation:tpulse 1.4s infinite}
 @keyframes tpulse{0%,100%{outline-color:#c9a84c;box-shadow:0 0 10px rgba(201,168,76,.5)}50%{outline-color:#f0d080;box-shadow:0 0 22px rgba(240,208,128,.85)}}
 #tutoArrow{display:none;position:fixed;z-index:505;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:12px solid #c9a84c}
-#tomatoFly{display:none;position:fixed;inset:0;z-index:900;pointer-events:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.45)}
-#tomatoFly .tf-e{font-size:72px;animation:tSplat 1s ease-out forwards}
-#tomatoFly .tf-m{font-family:'Cinzel',serif;font-size:13px;color:#f0d080;letter-spacing:2px;margin-top:16px;text-align:center;animation:tFadeIn .4s .3s ease-out both}
-@keyframes tSplat{0%{transform:translateY(-140px) scale(.4) rotate(-25deg)}65%{transform:translateY(10px) scale(1.5) rotate(8deg)}80%{transform:translateY(-8px) scale(1.2)}100%{transform:scale(2.2);opacity:0}}
-@keyframes tFadeIn{from{opacity:0}to{opacity:1}}
+#tomatoThrow{display:none;position:fixed;inset:0;z-index:850;pointer-events:none;overflow:hidden}
+#tomatoSplat{display:none;position:fixed;inset:0;z-index:900;pointer-events:none;overflow:hidden}
+@keyframes tomatoThrowAnim{0%{transform:translateX(-50%) rotate(0deg) scale(1);opacity:1}100%{transform:translateX(220px) translateY(-300px) rotate(600deg) scale(0.12);opacity:0}}
+@keyframes splatIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.18);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes splatSlideDown{0%{transform:translateY(0);opacity:1}75%{opacity:0.85}100%{transform:translateY(58vh);opacity:0}}
+@keyframes dripGrow{0%{height:0;opacity:0.95}85%{opacity:0.75}100%{height:var(--dh);opacity:0}}
+@keyframes flashFade{0%{opacity:0.45}100%{opacity:0}}
 .throw-btn{display:block;width:100%;margin-top:8px;padding:8px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:rgba(200,80,40,.15);border:1px solid #c85028;color:#f08060;cursor:pointer;transition:all .2s}
 .throw-btn:hover{background:rgba(200,80,40,.3);color:#f0d080}
 </style>
@@ -972,22 +974,100 @@ function showPlayersAt(pos, group){
   ov.style.display="flex"; ov.style.zIndex="999";
 }
 
+function sfxThrow(){
+  if(_muted)return;
+  try{
+    var ac=new(window.AudioContext||window.webkitAudioContext)();
+    var buf=ac.createBuffer(1,Math.floor(ac.sampleRate*0.38),ac.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.4);
+    var s=ac.createBufferSource();s.buffer=buf;
+    var f=ac.createBiquadFilter();f.type='bandpass';
+    f.frequency.setValueAtTime(1400,ac.currentTime);f.frequency.exponentialRampToValueAtTime(250,ac.currentTime+0.38);f.Q.value=0.7;
+    var g=ac.createGain();g.gain.setValueAtTime(0.45,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.38);
+    s.connect(f);f.connect(g);g.connect(ac.destination);s.start();
+  }catch(e){}
+}
+function sfxSplat(){
+  if(_muted)return;
+  try{
+    var ac=new(window.AudioContext||window.webkitAudioContext)();
+    var dur=0.55;
+    var buf=ac.createBuffer(1,Math.floor(ac.sampleRate*dur),ac.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++){var t=i/ac.sampleRate;d[i]=(Math.random()*2-1)*Math.exp(-t*8);}
+    var s=ac.createBufferSource();s.buffer=buf;
+    var f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=480;
+    var g=ac.createGain();g.gain.setValueAtTime(0.95,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+    s.connect(f);f.connect(g);g.connect(ac.destination);s.start();
+    var o=ac.createOscillator();o.type='sine';
+    o.frequency.setValueAtTime(110,ac.currentTime);o.frequency.exponentialRampToValueAtTime(28,ac.currentTime+0.2);
+    var g2=ac.createGain();g2.gain.setValueAtTime(0.85,ac.currentTime);g2.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.2);
+    o.connect(g2);g2.connect(ac.destination);o.start();o.stop(ac.currentTime+0.2);
+  }catch(e){}
+}
+function showThrowAnim(){
+  var el=document.getElementById('tomatoThrow');
+  el.innerHTML='';
+  var t=document.createElement('div');
+  t.style.cssText='position:absolute;bottom:30%;left:50%;font-size:54px;line-height:1;animation:tomatoThrowAnim 0.65s ease-in forwards';
+  t.textContent='🍅';
+  el.appendChild(t);
+  el.style.display='block';
+  setTimeout(function(){el.style.display='none';},800);
+}
 async function throwTomato(targetId, targetName){
   if(!ME||!(ME.tomatoes>0))return;
-  sfxClick();
+  sfxThrow();
+  showThrowAnim();
   ME.tomatoes=Math.max(0,ME.tomatoes-1);
   savePlayer();
   try{ await updateDoc(doc(db,'players',targetId),{incomingTomato:{from:ME.name,ts:Date.now()}}); }catch(e){}
-  closeOv();
+  setTimeout(function(){closeOv();},200);
   notify('🍅 Tomate lancée sur '+targetName+' !');
   updateBadge();
 }
 function showTomatoSplat(fromName){
-  var el=document.getElementById('tomatoFly');
-  document.getElementById('tfMsg').textContent=fromName+' t\'a balancé une tomate !';
-  el.style.display='flex';
-  setTimeout(function(){el.style.display='none';},1800);
+  sfxSplat();
+  var W=window.innerWidth,H=window.innerHeight;
+  var cx=W*(0.2+Math.random()*0.6), cy=H*(0.07+Math.random()*0.3), r=50+Math.random()*38;
+  var el=document.getElementById('tomatoSplat');
+  el.innerHTML='';
+  var flash=document.createElement('div');
+  flash.style.cssText='position:absolute;inset:0;background:rgba(200,35,5,0.3);animation:flashFade 0.22s ease-out forwards';
+  el.appendChild(flash);
+  var wrap=document.createElement('div');
+  wrap.style.cssText='position:absolute;inset:0;animation:splatSlideDown 4s 0.5s ease-in forwards';
+  var splat=document.createElement('div');
+  splat.style.cssText='position:absolute;left:'+(cx-r)+'px;top:'+(cy-r)+'px;width:'+(r*2)+'px;height:'+(r*2)+'px;'
+    +'border-radius:50%;background:radial-gradient(circle at 38% 35%,#ff5535 0%,#cc1e00 45%,#8b1400 80%,rgba(70,5,0,0.25) 100%);'
+    +'animation:splatIn 0.2s ease-out forwards';
+  wrap.appendChild(splat);
+  for(var j=0;j<6+Math.floor(Math.random()*5);j++){
+    var ang=Math.random()*Math.PI*2, dist=r*(1.05+Math.random()*0.95), sw=3+Math.random()*9;
+    var seed=document.createElement('div');
+    seed.style.cssText='position:absolute;left:'+(cx+Math.cos(ang)*dist-sw/2)+'px;top:'+(cy+Math.sin(ang)*dist*0.55-sw/2)+'px;'
+      +'width:'+sw+'px;height:'+sw+'px;border-radius:50%;background:#cc1e00;opacity:0.85;'
+      +'animation:splatIn 0.28s '+(Math.random()*110)+'ms ease-out forwards';
+    wrap.appendChild(seed);
+  }
+  for(var i=0;i<10+Math.floor(Math.random()*6);i++){
+    var angle=(Math.random()-0.3)*1.15;
+    var dw=4+Math.random()*10, dh=28+Math.random()*95;
+    var dx2=cx+Math.sin(angle)*r*(0.15+Math.random()*0.85)-dw/2;
+    var dy2=cy+Math.abs(Math.cos(angle))*r*0.55;
+    var drip=document.createElement('div');
+    drip.style.cssText='position:absolute;left:'+dx2+'px;top:'+dy2+'px;width:'+dw+'px;height:0;'
+      +'background:linear-gradient(to bottom,#cc1e00 0%,rgba(130,12,0,0.55) 65%,transparent 100%);'
+      +'border-radius:0 0 '+(dw/2)+'px '+(dw/2)+'px;'
+      +'animation:dripGrow '+(850+Math.random()*1300)+'ms '+(120+Math.random()*550)+'ms ease-in forwards;'
+      +'--dh:'+dh+'px';
+    wrap.appendChild(drip);
+  }
+  el.appendChild(wrap);
+  el.style.display='block';
   notify('🍅 '+fromName+' t\'a lancé une tomate !');
+  setTimeout(function(){el.style.display='none';},6000);
 }
 
 // ── RENDER BAR ──
@@ -1846,7 +1926,8 @@ clearTimeout(_loaderTimeout);
     </div>
   </div>
 </div>
-<div id="tomatoFly"><div class="tf-e">🍅</div><div class="tf-m" id="tfMsg"></div></div>
+<div id="tomatoThrow"></div>
+<div id="tomatoSplat"></div>
 <div id="annModal">
   <div style="background:#0c0804;border:1px solid #c9a84c;max-width:420px;width:90%;padding:28px 24px;font-family:'Cinzel',serif;text-align:center">
     <div style="font-size:10px;color:#c9a84c;letter-spacing:3px;margin-bottom:18px">⚔ MESSAGE DU MAESTER ⚔</div>
