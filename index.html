@@ -1505,8 +1505,8 @@ function refresh(){renderWP();renderPP();renderBar();}
 
 // ── LISTENERS FIREBASE ──
 function startListeners(){
-  var myPid=localStorage.getItem("wc_playerId");
   onSnapshot(collection(db,'players'),function(snap){
+    var myPid=localStorage.getItem("wc_playerId");
     PLAYERS=[];
     snap.forEach(function(d){
       var p=Object.assign({id:d.id},d.data());
