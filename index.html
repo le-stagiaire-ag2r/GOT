@@ -53,6 +53,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 .tnav{display:flex;gap:4px}
 .tb{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;padding:5px 10px;border:1px solid #6a4010;background:rgba(0,0,0,0.55);color:#e8d8b0;cursor:pointer;transition:all .2s;text-shadow:0 1px 2px rgba(0,0,0,0.8)}
 .tb:hover,.tb.on{border-color:#c9a84c;color:#f0d080;background:rgba(201,168,76,.1)}
+.tb:disabled{opacity:0.3;cursor:not-allowed;pointer-events:none}
 .pbadge{display:flex;align-items:center;gap:7px}
 .pbadge-av{width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .pbadge-name{font-family:'Cinzel',serif;font-size:11px;color:#c9a84c}
@@ -227,7 +228,7 @@ select.inp option{background:#0c0804;color:#f0ddb0}
     <div class="tnav">
       <button class="tb on" id="bMap"   onclick="nav('Map')">🗺 Carte</button>
       <button class="tb"    id="bLb"    onclick="nav('Lb')">⚔ Classement</button>
-      <button class="tb"    id="bQuest" onclick="nav('Quest')">📜 Quête</button>
+      <button class="tb"    id="bQuest" onclick="tryOpenQuest()">📜 Quête</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <button class="tb" id="muteBtn" onclick="toggleMute()" title="Musique">🔊</button>
@@ -450,6 +451,7 @@ var curQ = 0;
 var qAnswered = false;
 var monthScore = 0;
 var playerMonthProgress = {};
+var questLocked = false;
 var scale = 1, panX = 0, panY = 0;
 var drag = false, sx = 0, sy = 0, spx = 0, spy = 0;
 var COLORS = ["#3a78cc","#b03535","#c88018","#406890","#7a5018","#7a4888","#2a8858","#885020","#305888","#804080","#508840","#886040"];
@@ -1020,7 +1022,27 @@ scene.addEventListener("touchmove",function(e){e.preventDefault();if(e.touches.l
 scene.addEventListener("touchend",function(){drag=false;ld=0;});
 
 // ── NAV ──
+function tryOpenQuest(){
+  sfxClick();
+  var mdata=QUESTIONS[curMonth];
+  if(!mdata||curQ>=mdata.qs.length){nav('Quest');return;}
+  document.getElementById('questConfirmModal').style.display='flex';
+}
+function confirmQuest(go){
+  document.getElementById('questConfirmModal').style.display='none';
+  if(!go)return;
+  questLocked=true;
+  document.getElementById('bMap').disabled=true;
+  document.getElementById('bLb').disabled=true;
+  nav('Quest');
+}
+function unlockQuest(){
+  questLocked=false;
+  document.getElementById('bMap').disabled=false;
+  document.getElementById('bLb').disabled=false;
+}
 function nav(v){sfxClick();
+  if(questLocked&&v!=='Quest')return;
   document.querySelectorAll(".tb").forEach(function(b){b.classList.remove("on");});
   var btn=document.getElementById("b"+v); if(btn)btn.classList.add("on");
   var ov=document.getElementById("overlay");
@@ -1037,25 +1059,29 @@ function nav(v){sfxClick();
   ov.style.zIndex="999";
 }
 function closeOv(){
+  if(questLocked)return;
   var ov=document.getElementById("overlay");
   ov.style.display="none";
   document.querySelectorAll(".tb").forEach(function(b){b.classList.remove("on");});
   var bm=document.getElementById("bMap"); if(bm) bm.classList.add("on");
 }
 function closeOverlay(e){
+  if(questLocked)return;
   if(e.target===document.getElementById("overlay")) closeOv();
 }
 
 // ── QUEST ──
 function buildQuest(){
   var mdata=QUESTIONS[curMonth];
-  var noQ='<div class="ph"><div class="ph-t">📜 QUETE DU MOIS</div><button class="ph-c" onclick="closeOv()">✕</button></div>';
+  var closeBtn='<button class="ph-c" onclick="closeOv()">✕</button>';
+  var lockIcon='<span style="font-size:16px;color:#4a3010;padding:4px" title="Réponds à toutes les questions pour quitter">🔒</span>';
+  var noQ='<div class="ph"><div class="ph-t">📜 QUETE DU MOIS</div>'+closeBtn+'</div>';
   if(!mdata) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">⚔ Aucune quête publiée ce mois-ci.<br>Revenez bientôt !</div></div>';
   if(curQ>=mdata.qs.length) return noQ+'<div class="pb2"><div class="pq" style="text-align:center;padding:20px 0">⚔ Toutes les epreuves de ce mois ont ete relevees !<br><br>Revenez le mois prochain.</div></div>';
   var q=mdata.qs[curQ];
   var nxt=WP[Math.min((ME?ME.pos:0)+1,24)];
   return '<div class="ph"><div><div class="ph-t">📜 '+mdata.month+'</div><div style="font-family:Cinzel,serif;font-size:12px;color:#6a4e14;letter-spacing:1px;margin-top:3px">Question '+(curQ+1)+' / '+mdata.qs.length+'</div></div>'
-    +'<button class="ph-c" onclick="closeOv()">✕</button></div>'
+    +(questLocked?lockIcon:closeBtn)+'</div>'
     +'<div class="pb2">'
     +'<div class="plbl">PROCHAINE ETAPE → '+nxt.n+'</div>'
     +'<div class="pq">'+q.q+'</div>'
@@ -1089,7 +1115,7 @@ function answer(chosen){
     fb.innerHTML="🐦 Mauvaise réponse."+(defnTxt?"<br><br><span style='color:#c8aa6e;font-style:normal'>💡 "+defnTxt+"</span>":"")+"<br>"+nextBtn;
   }
   if(ME) savePlayer(nextQ);
-  if(isLast) curQ=nextQ;
+  if(isLast){curQ=nextQ;unlockQuest();}
   var pmName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
   if(pmName)playerMonthProgress[pmName]={curQ:nextQ,monthScore:monthScore};
   updateRecap();
@@ -1470,7 +1496,7 @@ function _endTuto(){
 window.goTo=goTo; window.startJourney=startJourney; window.confirmAvatar=confirmAvatar;
 window.selectCharCat=selectCharCat; window.randomizeChar=randomizeChar; window.scrollCharCats=scrollCharCats;
 window.showMonthResume=showMonthResume;
-window.nav=nav; window.closeOv=closeOv; window.closeOverlay=closeOverlay;
+window.nav=nav; window.closeOv=closeOv; window.closeOverlay=closeOverlay; window.tryOpenQuest=tryOpenQuest; window.confirmQuest=confirmQuest;
 window.answer=answer; window.nextQuestion=nextQuestion;
 window.checkAdmin=checkAdmin; window.addQuestion=addQuestion;
 window.removeDraftQ=removeDraftQ; window.refreshQPreview=refreshQPreview;
@@ -1770,6 +1796,16 @@ clearTimeout(_loaderTimeout);
 </div>
 
 <!-- ANNOUNCEMENT MODAL -->
+<div id="questConfirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:600;align-items:center;justify-content:center">
+  <div style="background:#0c0804;border:1px solid #c9a84c;max-width:380px;width:90%;padding:28px 24px;font-family:'Cinzel',serif;text-align:center">
+    <div style="font-size:10px;color:#c9a84c;letter-spacing:3px;margin-bottom:18px">⚔ QUÊTE DU MOIS ⚔</div>
+    <div style="font-size:13px;color:#f0ddb0;line-height:1.8;margin-bottom:24px">Attention ! Une fois la quête commencée, tu devras répondre à <strong style="color:#f0d080">toutes les questions</strong> avant de pouvoir quitter.</div>
+    <div style="display:flex;gap:12px">
+      <button onclick="confirmQuest(false)" style="flex:1;padding:12px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:transparent;border:1px solid #4a3010;color:#7a5c1e;cursor:pointer">← RETOUR</button>
+      <button onclick="confirmQuest(true)" style="flex:1;padding:12px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:rgba(201,168,76,.15);border:1px solid #c9a84c;color:#f0d080;cursor:pointer">⚔ POURSUIVRE</button>
+    </div>
+  </div>
+</div>
 <div id="annModal">
   <div style="background:#0c0804;border:1px solid #c9a84c;max-width:420px;width:90%;padding:28px 24px;font-family:'Cinzel',serif;text-align:center">
     <div style="font-size:10px;color:#c9a84c;letter-spacing:3px;margin-bottom:18px">⚔ MESSAGE DU MAESTER ⚔</div>
