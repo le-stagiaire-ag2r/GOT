@@ -162,6 +162,13 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 .tuto-hl{outline:2px solid #c9a84c;outline-offset:4px;animation:tpulse 1.4s infinite}
 @keyframes tpulse{0%,100%{outline-color:#c9a84c;box-shadow:0 0 10px rgba(201,168,76,.5)}50%{outline-color:#f0d080;box-shadow:0 0 22px rgba(240,208,128,.85)}}
 #tutoArrow{display:none;position:fixed;z-index:505;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:12px solid #c9a84c}
+#tomatoFly{display:none;position:fixed;inset:0;z-index:900;pointer-events:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.45)}
+#tomatoFly .tf-e{font-size:72px;animation:tSplat 1s ease-out forwards}
+#tomatoFly .tf-m{font-family:'Cinzel',serif;font-size:13px;color:#f0d080;letter-spacing:2px;margin-top:16px;text-align:center;animation:tFadeIn .4s .3s ease-out both}
+@keyframes tSplat{0%{transform:translateY(-140px) scale(.4) rotate(-25deg)}65%{transform:translateY(10px) scale(1.5) rotate(8deg)}80%{transform:translateY(-8px) scale(1.2)}100%{transform:scale(2.2);opacity:0}}
+@keyframes tFadeIn{from{opacity:0}to{opacity:1}}
+.throw-btn{display:block;width:100%;margin-top:8px;padding:8px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:rgba(200,80,40,.15);border:1px solid #c85028;color:#f08060;cursor:pointer;transition:all .2s}
+.throw-btn:hover{background:rgba(200,80,40,.3);color:#f0d080}
 </style>
 </head>
 <body>
@@ -501,7 +508,7 @@ async function startJourney() {
       var snap = await getDoc(doc(db,'players',pid));
       if(snap.exists()){
         var data = snap.data();
-        ME = {id:pid, name:data.name, avatarCfg:data.avatarCfg||null, avatar:data.avatar||null, pos:data.pos, col:data.col, brd:data.brd};
+        ME = {id:pid, name:data.name, avatarCfg:data.avatarCfg||null, avatar:data.avatar||null, pos:data.pos, col:data.col, brd:data.brd, tomatoes:data.tomatoes||0};
         var curMName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
         var sameMonth=curMName?(data.lastMonthName===curMName||(!data.lastMonthName&&typeof data.lastMonth==='number'&&data.lastMonth===curMonth)):(typeof data.lastMonth==='number'&&data.lastMonth===curMonth);
         if(sameMonth){
@@ -814,7 +821,7 @@ async function savePlayer(savedCurQ){
   if(!pid) return;
   var qIdx=(savedCurQ!==undefined)?savedCurQ:curQ;
   var mName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
-  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:qIdx, monthScore:monthScore, lastMonth:curMonth, lastMonthName:mName}); }catch(e){}
+  try{ await updateDoc(doc(db,'players',pid), {pos:ME.pos, curQ:qIdx, monthScore:monthScore, lastMonth:curMonth, lastMonthName:mName, tomatoes:ME.tomatoes||0}); }catch(e){}
 }
 
 // ── SVG HELPER ──
@@ -952,14 +959,35 @@ function showPlayersAt(pos, group){
     +'<div class="pb2">'
     +group.map(function(pl){
       var isMe=ME&&pl.id===ME.id;
+      var safeName=pl.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #1a1208">'
         +'<div style="width:38px;height:38px;flex-shrink:0">'+charSVGHtml(pl,38)+'</div>'
-        +'<span style="font-family:Cinzel,serif;font-size:13px;color:'+pl.brd+'">'+pl.name+(isMe?' ★':'')+'</span>'
+        +'<div><span style="font-family:Cinzel,serif;font-size:13px;color:'+pl.brd+'">'+pl.name+(isMe?' ★':'')+'</span>'
+        +(ME&&ME.tomatoes>0&&!isMe?'<button class="throw-btn" onclick="throwTomato(\''+pl.id+'\',\''+safeName+'\')">🍅 Lancer une tomate</button>':'')
+        +'</div>'
         +'</div>';
     }).join('')
     +'</div>';
   var ov=document.getElementById("overlay");
   ov.style.display="flex"; ov.style.zIndex="999";
+}
+
+async function throwTomato(targetId, targetName){
+  if(!ME||!(ME.tomatoes>0))return;
+  sfxClick();
+  ME.tomatoes=Math.max(0,ME.tomatoes-1);
+  savePlayer();
+  try{ await updateDoc(doc(db,'players',targetId),{incomingTomato:{from:ME.name,ts:Date.now()}}); }catch(e){}
+  closeOv();
+  notify('🍅 Tomate lancée sur '+targetName+' !');
+  updateBadge();
+}
+function showTomatoSplat(fromName){
+  var el=document.getElementById('tomatoFly');
+  document.getElementById('tfMsg').textContent=fromName+' t\'a balancé une tomate !';
+  el.style.display='flex';
+  setTimeout(function(){el.style.display='none';},1800);
+  notify('🍅 '+fromName+' t\'a lancé une tomate !');
 }
 
 // ── RENDER BAR ──
@@ -1104,6 +1132,7 @@ function answer(chosen){
   if(chosen===q.c){
     sfxCorrect();
     monthScore++;
+    if(ME) ME.tomatoes=(ME.tomatoes||0)+1;
     if(ME){ME.pos=Math.min(ME.pos+1,24);}
     document.getElementById("qprog").style.width=(monthScore/3*100)+"%";
     setTimeout(function(){refresh();updateBadge();},300);
@@ -1284,7 +1313,7 @@ async function resetSeason(){
 }
 function updateBadge(){
   if(!ME)return;
-  document.getElementById("myBadge").innerHTML='<div class="pbadge-av">'+charSVGHtml(ME,32)+'</div><div><div class="pbadge-name">'+ME.name+'</div><div class="pbadge-pos">'+(ME.pos===0?'Départ':'Case '+ME.pos+'/24')+'</div></div>';
+  document.getElementById("myBadge").innerHTML='<div class="pbadge-av">'+charSVGHtml(ME,32)+'</div><div><div class="pbadge-name">'+ME.name+'</div><div class="pbadge-pos">'+(ME.pos===0?'Départ':'Case '+ME.pos+'/24')+(ME.tomatoes>0?' · 🍅×'+ME.tomatoes:'')+'</div></div>';
   updateRecap();
 }
 function updateRecap(){
@@ -1343,7 +1372,16 @@ function startListeners(){
     snap.forEach(function(d){
       var p=Object.assign({id:d.id},d.data());
       PLAYERS.push(p);
-      if(myPid&&d.id===myPid&&ME){ME.pos=p.pos;ME.name=p.name;if(p.avatarCfg)ME.avatarCfg=p.avatarCfg;else ME.avatar=p.avatar||ME.avatar;}
+      if(myPid&&d.id===myPid&&ME){
+        ME.pos=p.pos;ME.name=p.name;
+        if(p.avatarCfg)ME.avatarCfg=p.avatarCfg;else ME.avatar=p.avatar||ME.avatar;
+        ME.tomatoes=typeof p.tomatoes==='number'?p.tomatoes:ME.tomatoes||0;
+        if(p.incomingTomato&&p.incomingTomato.ts&&(!ME._lastTomato||p.incomingTomato.ts>ME._lastTomato)){
+          ME._lastTomato=p.incomingTomato.ts;
+          showTomatoSplat(p.incomingTomato.from);
+          setTimeout(function(){updateDoc(doc(db,'players',myPid),{incomingTomato:null});},1500);
+        }
+      }
     });
     refresh();
     if(ME)updateBadge();
@@ -1506,7 +1544,7 @@ window.publishQuest=publishQuest; window.setActiveMonth=setActiveMonth;
 window.adminAdvance=adminAdvance; window.deletePlayer=deletePlayer; window.resetSeason=resetSeason; window.resetQuestions=resetQuestions;
 window.saveNextDate=saveNextDate; window.closeAnn=closeAnn; window.publishAnn=publishAnn;
 window.populateStepSel=populateStepSel;
-window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window.showPlayersAt=showPlayersAt;
+window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window.showPlayersAt=showPlayersAt; window.throwTomato=throwTomato;
 window.toggleMute=toggleMute;
 
 // ── AUDIO SYSTEM ──
@@ -1808,6 +1846,7 @@ clearTimeout(_loaderTimeout);
     </div>
   </div>
 </div>
+<div id="tomatoFly"><div class="tf-e">🍅</div><div class="tf-m" id="tfMsg"></div></div>
 <div id="annModal">
   <div style="background:#0c0804;border:1px solid #c9a84c;max-width:420px;width:90%;padding:28px 24px;font-family:'Cinzel',serif;text-align:center">
     <div style="font-size:10px;color:#c9a84c;letter-spacing:3px;margin-bottom:18px">⚔ MESSAGE DU MAESTER ⚔</div>
