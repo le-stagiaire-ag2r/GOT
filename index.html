@@ -946,8 +946,11 @@ function renderPP() {
       var count=svgEl("text"); count.setAttribute("text-anchor","middle"); count.setAttribute("dominant-baseline","central");
       count.setAttribute("font-family","Cinzel,serif"); count.setAttribute("font-weight","700");
       count.setAttribute("font-size","18");
-      count.setAttribute("fill",hasMe?"#f0d080":"#c9a84c");
-      count.setAttribute("filter","drop-shadow(0 1px 3px rgba(0,0,0,0.9))");
+      count.setAttribute("fill","#ffffff");
+      count.setAttribute("stroke","#1a0804");
+      count.setAttribute("stroke-width","3");
+      count.setAttribute("paint-order","stroke fill");
+      count.setAttribute("filter","drop-shadow(0 1px 4px rgba(0,0,0,1))");
       count.textContent=label;
       grp.appendChild(count);
     }
