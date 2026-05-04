@@ -1024,6 +1024,8 @@ scene.addEventListener("touchend",function(){drag=false;ld=0;});
 // ── NAV ──
 function tryOpenQuest(){
   sfxClick();
+  var tutoActive=document.getElementById('tutoOv')&&document.getElementById('tutoOv').style.display!=='none';
+  if(tutoActive){nav('Quest');return;}
   var mdata=QUESTIONS[curMonth];
   if(!mdata||curQ>=mdata.qs.length){nav('Quest');return;}
   document.getElementById('questConfirmModal').style.display='flex';
