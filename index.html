@@ -449,6 +449,7 @@ var curMonth = 0;
 var curQ = 0;
 var qAnswered = false;
 var monthScore = 0;
+var playerMonthProgress = {};
 var scale = 1, panX = 0, panY = 0;
 var drag = false, sx = 0, sy = 0, spx = 0, spy = 0;
 var COLORS = ["#3a78cc","#b03535","#c88018","#406890","#7a5018","#7a4888","#2a8858","#885020","#305888","#804080","#508840","#886040"];
@@ -500,11 +501,12 @@ async function startJourney() {
         var data = snap.data();
         ME = {id:pid, name:data.name, avatarCfg:data.avatarCfg||null, avatar:data.avatar||null, pos:data.pos, col:data.col, brd:data.brd};
         var curMName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
-        var sameMonth=(curMName&&data.lastMonthName===curMName)||(typeof data.lastMonth==='number'&&data.lastMonth===curMonth&&!data.lastMonthName);
+        var sameMonth=curMName?(data.lastMonthName===curMName||(!data.lastMonthName&&typeof data.lastMonth==='number'&&data.lastMonth===curMonth)):(typeof data.lastMonth==='number'&&data.lastMonth===curMonth);
         if(sameMonth){
           curQ=typeof data.curQ==='number'?data.curQ:0;
           monthScore=typeof data.monthScore==='number'?data.monthScore:0;
         }
+        if(curMName)playerMonthProgress[curMName]={curQ:curQ,monthScore:monthScore};
         updateBadge();
         goTo("sGame");
         resetView();
@@ -1087,6 +1089,9 @@ function answer(chosen){
     fb.innerHTML="🐦 Mauvaise réponse."+(defnTxt?"<br><br><span style='color:#c8aa6e;font-style:normal'>💡 "+defnTxt+"</span>":"")+"<br>"+nextBtn;
   }
   if(ME) savePlayer(nextQ);
+  if(isLast) curQ=nextQ;
+  var pmName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
+  if(pmName)playerMonthProgress[pmName]={curQ:nextQ,monthScore:monthScore};
   updateRecap();
 }
 function nextQuestion(){
@@ -1322,7 +1327,11 @@ function startListeners(){
       if(data.questions&&data.questions.length>0)QUESTIONS=data.questions;
       if(typeof data.curMonth==='number'){
         var prev=curMonth; curMonth=data.curMonth;
-        if(prev!==curMonth){curQ=0;monthScore=0;qAnswered=false;}
+        if(prev!==curMonth){
+          curQ=0;monthScore=0;qAnswered=false;
+          var newMName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
+          if(newMName&&playerMonthProgress[newMName]){curQ=playerMonthProgress[newMName].curQ;monthScore=playerMonthProgress[newMName].monthScore;}
+        }
       }
       if(data.nextDate) updateCountdown(data.nextDate);
       checkAnnouncement(data);
