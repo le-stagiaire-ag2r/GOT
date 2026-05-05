@@ -545,6 +545,11 @@ async function startJourney() {
         goTo("sGame");
         resetView();
         refresh();
+        if(data.incomingTomato&&data.incomingTomato.ts){
+          ME._lastTomato=data.incomingTomato.ts;
+          setTimeout(function(){showTomatoSplat(data.incomingTomato.from);},800);
+          setTimeout(function(){updateDoc(doc(db,'players',pid),{incomingTomato:null});},2500);
+        }
         setTimeout(startTutorial, 900);
         return;
       }
