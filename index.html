@@ -174,10 +174,11 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 @keyframes flashFade{0%{opacity:0.45}100%{opacity:0}}
 .throw-btn{display:block;width:100%;margin-top:8px;padding:8px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:rgba(200,80,40,.15);border:1px solid #c85028;color:#f08060;cursor:pointer;transition:all .2s}
 .throw-btn:hover{background:rgba(200,80,40,.3);color:#f0d080}
-@keyframes congratsIn{0%{opacity:0;transform:translateY(-28px) scale(0.92)}12%{opacity:1;transform:translateY(0) scale(1)}78%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(18px) scale(0.96)}}
-.congrats-card{position:fixed;z-index:820;pointer-events:none;background:rgba(255,248,230,0.1);border:1px solid rgba(201,168,76,0.35);padding:10px 16px;font-family:'Cinzel',serif;min-width:180px;max-width:240px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 2px 16px rgba(0,0,0,0.25)}
-.congrats-card .cc-title{font-size:9px;letter-spacing:2px;color:rgba(220,195,140,0.75);margin-bottom:5px}
-.congrats-card .cc-name{font-size:13px;color:rgba(255,240,200,0.9);font-weight:700;letter-spacing:1px;text-shadow:0 1px 8px rgba(201,168,76,0.4)}
+@keyframes congratsTitleIn{0%{opacity:0;transform:scale(0.85) translateY(-20px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes congratsTitleOut{0%{opacity:1}100%{opacity:0}}
+@keyframes congratsNameFall{0%{opacity:0;transform:translateY(-10px)}8%{opacity:1}80%{opacity:0.88}100%{opacity:0;transform:translateY(62vh)}}
+.congrats-title{position:fixed;left:0;right:0;text-align:center;z-index:821;pointer-events:none;font-family:'Cinzel Decorative',serif;font-size:clamp(18px,3.5vw,32px);color:#f0d080;letter-spacing:4px;text-shadow:0 0 40px rgba(201,168,76,0.7),0 2px 12px rgba(0,0,0,1);animation:congratsTitleIn 1.2s ease forwards}
+.congrats-name{position:fixed;z-index:820;pointer-events:none;font-family:'Cinzel',serif;font-size:clamp(13px,2vw,18px);color:rgba(255,240,200,0.9);font-weight:700;letter-spacing:2px;white-space:nowrap;text-shadow:0 0 14px rgba(201,168,76,0.5),0 1px 6px rgba(0,0,0,0.9);animation:congratsNameFall 5.5s ease-in forwards}
 .congrats-name-row{display:flex;gap:6px;align-items:center;margin-bottom:5px}
 .congrats-name-row input{flex:1}
 .congrats-name-row button{flex-shrink:0;background:rgba(180,40,20,.2);border:1px solid #803020;color:#c06040;font-size:12px;width:28px;height:28px;cursor:pointer;font-family:Cinzel,serif}
@@ -1142,29 +1143,35 @@ function showTomatoSplat(fromName){
 }
 
 // ── FÉLICITATIONS ──
-var _CONGRATS_POSITIONS=[
-  {left:'4%',top:'14%'},{right:'4%',top:'11%'},{left:'28%',top:'7%'},
-  {right:'22%',top:'18%'},{left:'6%',top:'44%'},{right:'6%',top:'40%'}
-];
 function showCongratsAnimation(title, names){
   if(_congratsShown)return;
   _congratsShown=true;
   var container=document.getElementById('congratsContainer');
-  var delay=0;
-  names.forEach(function(name,i){
+  container.innerHTML='';
+  var titleEl=document.createElement('div');
+  titleEl.className='congrats-title';
+  titleEl.style.top='16%';
+  titleEl.textContent='⚔ '+title.toUpperCase()+' ⚔';
+  container.appendChild(titleEl);
+  var delay=1400;
+  var nameDelay=1800;
+  names.forEach(function(name){
     setTimeout(function(){
-      var pos=_CONGRATS_POSITIONS[i%_CONGRATS_POSITIONS.length];
-      var card=document.createElement('div');
-      card.className='congrats-card';
-      var style='animation:congratsIn 6s ease forwards;';
-      Object.keys(pos).forEach(function(k){style+=k+':'+pos[k]+';';});
-      card.style.cssText=style;
-      card.innerHTML='<div class="cc-title">⚔ '+title.toUpperCase()+'</div><div class="cc-name">🏆 '+name+'</div>';
-      container.appendChild(card);
-      setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},6100);
+      var leftPct=4+Math.random()*68;
+      var el=document.createElement('div');
+      el.className='congrats-name';
+      el.style.cssText='left:'+leftPct+'%;top:30%;animation:congratsNameFall 5.5s ease-in forwards';
+      el.textContent='🏆 '+name;
+      container.appendChild(el);
+      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},5600);
     },delay);
-    delay+=2000;
+    delay+=nameDelay;
   });
+  var total=delay+1000;
+  setTimeout(function(){
+    titleEl.style.animation='congratsTitleOut 1.2s ease forwards';
+    setTimeout(function(){container.innerHTML='';},1300);
+  },total);
 }
 function addCongratsName(){
   var list=document.getElementById('congrNamesList');
