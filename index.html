@@ -1165,17 +1165,17 @@ function showCongratsAnimation(title, names){
   titleEl.textContent='⚔ '+title.toUpperCase()+' ⚔';
   container.appendChild(titleEl);
   var delay=1400;
-  var nameDelay=2800;
+  var nameDelay=3500;
   names.forEach(function(name){
     setTimeout(function(){
         var side=Math.random()<0.5;
       var leftPct=side?(2+Math.random()*16):(76+Math.random()*18);
       var el=document.createElement('div');
       el.className='congrats-name';
-      el.style.cssText='left:'+leftPct+'%;top:30%;animation:congratsNameFall 15s ease-in forwards';
+      el.style.cssText='left:'+leftPct+'%;top:30%;animation:congratsNameFall 30s ease-in forwards';
       el.textContent='🏆 '+name;
       container.appendChild(el);
-      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},15100);
+      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},30100);
     },delay);
     delay+=nameDelay;
   });
