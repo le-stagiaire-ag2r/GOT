@@ -518,6 +518,7 @@ var playerMonthProgress = {};
 var questLocked = false;
 var _qTimer=null, _qTimeLeft=90, _qTimeUsed=0;
 var _congratsShown = false;
+var _pendingCongrats = null;
 var scale = 1, panX = 0, panY = 0;
 var drag = false, sx = 0, sy = 0, spx = 0, spy = 0;
 var COLORS = ["#3a78cc","#b03535","#c88018","#406890","#7a5018","#7a4888","#2a8858","#885020","#305888","#804080","#508840","#886040"];
@@ -578,6 +579,7 @@ async function startJourney() {
           setTimeout(function(){showTomatoSiege(pt.length,names);},800);
           setTimeout(function(){updateDoc(doc(db,'players',pid),{incomingTomato:null,pendingTomatoes:deleteField()});},2800);
         }
+        if(_pendingCongrats&&!_congratsShown){setTimeout(function(){showCongratsAnimation(_pendingCongrats.title,_pendingCongrats.names);},1200);_pendingCongrats=null;}
         setTimeout(startTutorial, 900);
         return;
       }
@@ -1161,10 +1163,10 @@ function showCongratsAnimation(title, names){
       var leftPct=side?(2+Math.random()*16):(76+Math.random()*18);
       var el=document.createElement('div');
       el.className='congrats-name';
-      el.style.cssText='left:'+leftPct+'%;top:30%;animation:congratsNameFall 8s ease-in forwards';
+      el.style.cssText='left:'+leftPct+'%;top:30%;animation:congratsNameFall 15s ease-in forwards';
       el.textContent='🏆 '+name;
       container.appendChild(el);
-      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},8100);
+      setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},15100);
     },delay);
     delay+=nameDelay;
   });
@@ -1719,7 +1721,10 @@ function startListeners(){
       checkAnnouncement(data);
       if(data.congrats&&data.congrats.names&&data.congrats.createdAt){
         var age=Date.now()-data.congrats.createdAt;
-        if(age<3*86400000&&!_congratsShown&&ME)showCongratsAnimation(data.congrats.title,data.congrats.names);
+        if(age<3*86400000&&!_congratsShown){
+          if(ME){showCongratsAnimation(data.congrats.title,data.congrats.names);}
+          else{_pendingCongrats=data.congrats;}
+        }
         if(document.getElementById("sAdmin").classList.contains("active"))updateCongratsStatus(data.congrats);
       }
       if(document.getElementById("sAdmin").classList.contains("active"))populateMonthSel();
