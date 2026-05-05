@@ -444,7 +444,7 @@ var _loaderTimeout=setTimeout(function(){
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, arrayUnion, deleteField, increment } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 var WP = [
   {n:"Départ",                     x:760, y:1390, cross:false},
@@ -572,12 +572,12 @@ async function startJourney() {
         goTo("sGame");
         resetView();
         refresh();
-        if(data.pendingTomatoes&&data.pendingTomatoes.length>0){
-          var pt=data.pendingTomatoes;
-          ME._lastTomato=Math.max.apply(null,pt.map(function(t){return t.ts||0;}));
-          var names=[...new Set(pt.map(function(t){return t.from;}))];
-          setTimeout(function(){showTomatoSiege(pt.length,names);},800);
-          setTimeout(function(){updateDoc(doc(db,'players',pid),{incomingTomato:null,pendingTomatoes:deleteField()});},2800);
+        var ptCount=typeof data.pendingTomatoCount==='number'?data.pendingTomatoCount:(data.pendingTomatoes?data.pendingTomatoes.length:0);
+        var ptNames=data.pendingTomatoNames||(data.pendingTomatoes?[...new Set(data.pendingTomatoes.map(function(t){return t.from;}))]:[]);
+        if(ptCount>0){
+          ME._lastTomato=Date.now();
+          setTimeout(function(){showTomatoSiege(ptCount,ptNames.length?ptNames:['?']);},800);
+          setTimeout(function(){updateDoc(doc(db,'players',pid),{incomingTomato:null,pendingTomatoCount:deleteField(),pendingTomatoNames:deleteField(),pendingTomatoes:deleteField()});},2800);
         }
         try{
           var gsSnap=await getDoc(doc(db,'gameState','main'));
@@ -1092,7 +1092,7 @@ async function throwTomato(targetId, targetName){
   showThrowAnim();
   ME.tomatoes=Math.max(0,ME.tomatoes-1);
   savePlayer();
-  try{ await updateDoc(doc(db,'players',targetId),{incomingTomato:{from:ME.name,ts:Date.now()},pendingTomatoes:arrayUnion({from:ME.name,ts:Date.now()})}); }catch(e){}
+  try{ await updateDoc(doc(db,'players',targetId),{incomingTomato:{from:ME.name,ts:Date.now()},pendingTomatoCount:increment(1),pendingTomatoNames:arrayUnion(ME.name)}); }catch(e){}
   setTimeout(function(){closeOv();},200);
   notify('🍅 Tomate lancée sur '+targetName+' !');
   updateBadge();
@@ -1706,8 +1706,11 @@ function startListeners(){
         ME.tomatoes=typeof p.tomatoes==='number'?p.tomatoes:ME.tomatoes||0;
         if(p.incomingTomato&&p.incomingTomato.ts&&(!ME._lastTomato||p.incomingTomato.ts>ME._lastTomato)){
           ME._lastTomato=p.incomingTomato.ts;
-          showTomatoSplat(p.incomingTomato.from);
-          setTimeout(function(){updateDoc(doc(db,'players',myPid),{incomingTomato:null,pendingTomatoes:deleteField()});},1500);
+          var liveCount=typeof p.pendingTomatoCount==='number'&&p.pendingTomatoCount>0?p.pendingTomatoCount:1;
+          var liveNames=p.pendingTomatoNames&&p.pendingTomatoNames.length?p.pendingTomatoNames:[p.incomingTomato.from];
+          if(liveCount<=1)showTomatoSplat(p.incomingTomato.from);
+          else showTomatoSiege(liveCount,liveNames);
+          setTimeout(function(){updateDoc(doc(db,'players',myPid),{incomingTomato:null,pendingTomatoCount:deleteField(),pendingTomatoNames:deleteField(),pendingTomatoes:deleteField()});},4000);
         }
       }
     });
