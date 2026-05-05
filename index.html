@@ -174,6 +174,13 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 @keyframes flashFade{0%{opacity:0.45}100%{opacity:0}}
 .throw-btn{display:block;width:100%;margin-top:8px;padding:8px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:rgba(200,80,40,.15);border:1px solid #c85028;color:#f08060;cursor:pointer;transition:all .2s}
 .throw-btn:hover{background:rgba(200,80,40,.3);color:#f0d080}
+@keyframes congratsIn{0%{opacity:0;transform:translateY(-28px) scale(0.92)}12%{opacity:1;transform:translateY(0) scale(1)}78%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(18px) scale(0.96)}}
+.congrats-card{position:fixed;z-index:820;pointer-events:none;background:rgba(8,4,2,0.88);border:1px solid #c9a84c;padding:10px 16px;font-family:'Cinzel',serif;min-width:180px;max-width:240px;box-shadow:0 4px 24px rgba(0,0,0,0.8),0 0 12px rgba(201,168,76,0.15)}
+.congrats-card .cc-title{font-size:9px;letter-spacing:2px;color:#c9a84c;margin-bottom:5px}
+.congrats-card .cc-name{font-size:13px;color:#f0d080;font-weight:700;letter-spacing:1px}
+.congrats-name-row{display:flex;gap:6px;align-items:center;margin-bottom:5px}
+.congrats-name-row input{flex:1}
+.congrats-name-row button{flex-shrink:0;background:rgba(180,40,20,.2);border:1px solid #803020;color:#c06040;font-size:12px;width:28px;height:28px;cursor:pointer;font-family:Cinzel,serif}
 #tomatoToast{display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:1100;background:#1a0c04;border:1px solid #c85028;color:#f08060;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1.5px;padding:10px 22px;border-radius:2px;box-shadow:0 4px 20px rgba(0,0,0,0.8);white-space:nowrap;pointer-events:none}
 @keyframes toastIn{0%{opacity:0;transform:translateX(-50%) translateY(12px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes toastOut{0%{opacity:1}100%{opacity:0}}
@@ -392,6 +399,23 @@ select.inp option{background:#0c0804;color:#f0ddb0}
       </div>
     </div>
 
+    <!-- FÉLICITATIONS -->
+    <div class="panel" style="margin-bottom:14px">
+      <div class="ph"><div class="ph-t">⟡ FÉLICITATIONS AUX JOUEURS</div></div>
+      <div class="pb2">
+        <div class="plbl">TITRE DE L'ANIMATION</div>
+        <input class="inp" id="congrTitle" placeholder="Ex : Félicitations pour ce mois !">
+        <div class="plbl" style="margin-top:10px">NOMS À AFFICHER</div>
+        <div id="congrNamesList"></div>
+        <button class="pbtn pbtn-g" onclick="addCongratsName()" style="margin-top:4px">+ AJOUTER UN NOM</button>
+        <div class="psep"></div>
+        <button class="pbtn pbtn-g" onclick="launchCongrats()">⚔ LANCER L'ANIMATION</button>
+        <button class="pbtn pbtn-r" onclick="clearCongrats()" style="margin-top:6px">✕ SUPPRIMER L'ANIMATION</button>
+        <div class="pmsg" id="adminMsg8"></div>
+        <div id="congrStatus" style="font-family:Cinzel,serif;font-size:10px;color:#6a4e14;margin-top:8px;letter-spacing:1px"></div>
+      </div>
+    </div>
+
     <div style="text-align:center;padding:0 0 24px">
       <button class="btn-sec" onclick="goTo('sGame')">← RETOUR À LA CARTE</button>
     </div>
@@ -492,6 +516,7 @@ var monthScore = 0;
 var playerMonthProgress = {};
 var questLocked = false;
 var _qTimer=null, _qTimeLeft=90, _qTimeUsed=0;
+var _congratsShown = false;
 var scale = 1, panX = 0, panY = 0;
 var drag = false, sx = 0, sy = 0, spx = 0, spy = 0;
 var COLORS = ["#3a78cc","#b03535","#c88018","#406890","#7a5018","#7a4888","#2a8858","#885020","#305888","#804080","#508840","#886040"];
@@ -1116,6 +1141,64 @@ function showTomatoSplat(fromName){
   setTimeout(function(){el.style.display='none';},5500);
 }
 
+// ── FÉLICITATIONS ──
+var _CONGRATS_POSITIONS=[
+  {left:'4%',top:'14%'},{right:'4%',top:'11%'},{left:'28%',top:'7%'},
+  {right:'22%',top:'18%'},{left:'6%',top:'44%'},{right:'6%',top:'40%'}
+];
+function showCongratsAnimation(title, names){
+  if(_congratsShown)return;
+  _congratsShown=true;
+  var container=document.getElementById('congratsContainer');
+  var delay=0;
+  names.forEach(function(name,i){
+    setTimeout(function(){
+      var pos=_CONGRATS_POSITIONS[i%_CONGRATS_POSITIONS.length];
+      var card=document.createElement('div');
+      card.className='congrats-card';
+      var style='animation:congratsIn 6s ease forwards;';
+      Object.keys(pos).forEach(function(k){style+=k+':'+pos[k]+';';});
+      card.style.cssText=style;
+      card.innerHTML='<div class="cc-title">⚔ '+title.toUpperCase()+'</div><div class="cc-name">🏆 '+name+'</div>';
+      container.appendChild(card);
+      setTimeout(function(){if(card.parentNode)card.parentNode.removeChild(card);},6100);
+    },delay);
+    delay+=2000;
+  });
+}
+function addCongratsName(){
+  var list=document.getElementById('congrNamesList');
+  var row=document.createElement('div'); row.className='congrats-name-row';
+  row.innerHTML='<input class="inp" style="margin-bottom:0" placeholder="Prénom Nom"><button onclick="this.parentNode.remove()">✕</button>';
+  list.appendChild(row);
+}
+async function launchCongrats(){
+  var title=document.getElementById('congrTitle').value.trim();
+  if(!title){document.getElementById('adminMsg8').textContent='Entrez un titre.';return;}
+  var inputs=document.querySelectorAll('#congrNamesList input');
+  var names=Array.from(inputs).map(function(i){return i.value.trim();}).filter(Boolean);
+  if(!names.length){document.getElementById('adminMsg8').textContent='Ajoutez au moins un nom.';return;}
+  try{
+    await updateDoc(doc(db,'gameState','main'),{congrats:{title:title,names:names,createdAt:Date.now()}});
+    document.getElementById('adminMsg8').textContent='Animation lancée !';
+    updateCongratsStatus({title:title,names:names,createdAt:Date.now()});
+  }catch(e){document.getElementById('adminMsg8').textContent='Erreur.';}
+}
+async function clearCongrats(){
+  try{
+    await updateDoc(doc(db,'gameState','main'),{congrats:deleteField()});
+    document.getElementById('adminMsg8').textContent='Animation supprimée.';
+    document.getElementById('congrStatus').textContent='';
+  }catch(e){document.getElementById('adminMsg8').textContent='Erreur.';}
+}
+function updateCongratsStatus(c){
+  var el=document.getElementById('congrStatus');
+  if(!el||!c)return;
+  var days=Math.floor((Date.now()-c.createdAt)/86400000);
+  var left=3-days;
+  el.textContent='Active depuis '+days+' jour'+(days>1?'s':'')+' · expire dans '+Math.max(0,left)+' jour'+(left>1?'s':'')+' · '+c.names.length+' nom'+(c.names.length>1?'s':'');
+}
+
 function showTomatoSiege(count, names){
   sfxSplat();
   var displayNames=names.length<=2?names.join(' et '):(names[0]+', '+names[1]+' et '+(names.length-2)+' autre'+(names.length-2>1?'s':''));
@@ -1626,6 +1709,11 @@ function startListeners(){
       }
       if(data.nextDate) updateCountdown(data.nextDate);
       checkAnnouncement(data);
+      if(data.congrats&&data.congrats.names&&data.congrats.createdAt){
+        var age=Date.now()-data.congrats.createdAt;
+        if(age<3*86400000&&!_congratsShown&&ME)showCongratsAnimation(data.congrats.title,data.congrats.names);
+        if(document.getElementById("sAdmin").classList.contains("active"))updateCongratsStatus(data.congrats);
+      }
       if(document.getElementById("sAdmin").classList.contains("active"))populateMonthSel();
     }
   });
@@ -1768,6 +1856,7 @@ window.removeDraftQ=removeDraftQ; window.refreshQPreview=refreshQPreview;
 window.publishQuest=publishQuest; window.setActiveMonth=setActiveMonth;
 window.adminAdvance=adminAdvance; window.deletePlayer=deletePlayer; window.resetSeason=resetSeason; window.resetQuestions=resetQuestions;
 window.saveNextDate=saveNextDate; window.closeAnn=closeAnn; window.publishAnn=publishAnn;
+window.addCongratsName=addCongratsName; window.launchCongrats=launchCongrats; window.clearCongrats=clearCongrats;
 window.populateStepSel=populateStepSel;
 window.zoomBy=zoomBy; window.resetView=resetView; window.clickWP=clickWP; window.showPlayersAt=showPlayersAt; window.throwTomato=throwTomato;
 window.toggleMute=toggleMute;
@@ -2073,6 +2162,7 @@ hideLoader();
 <div id="tomatoThrow"></div>
 <div id="tomatoSplat"></div>
 <div id="tomatoToast"></div>
+<div id="congratsContainer"></div>
 <div id="annModal">
   <div style="background:#0c0804;border:1px solid #c9a84c;max-width:420px;width:90%;padding:28px 24px;font-family:'Cinzel',serif;text-align:center">
     <div style="font-size:10px;color:#c9a84c;letter-spacing:3px;margin-bottom:18px">⚔ MESSAGE DU MAESTER ⚔</div>
