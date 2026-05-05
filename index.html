@@ -579,7 +579,16 @@ async function startJourney() {
           setTimeout(function(){showTomatoSiege(pt.length,names);},800);
           setTimeout(function(){updateDoc(doc(db,'players',pid),{incomingTomato:null,pendingTomatoes:deleteField()});},2800);
         }
-        if(_pendingCongrats&&!_congratsShown){setTimeout(function(){showCongratsAnimation(_pendingCongrats.title,_pendingCongrats.names);},1200);_pendingCongrats=null;}
+        try{
+          var gsSnap=await getDoc(doc(db,'gameState','main'));
+          if(gsSnap.exists()){
+            var gsd=gsSnap.data();
+            if(gsd.congrats&&gsd.congrats.names&&gsd.congrats.createdAt&&!_congratsShown){
+              var cage=Date.now()-gsd.congrats.createdAt;
+              if(cage<3*86400000)setTimeout(function(){showCongratsAnimation(gsd.congrats.title,gsd.congrats.names);},1400);
+            }
+          }
+        }catch(e){}
         setTimeout(startTutorial, 900);
         return;
       }
