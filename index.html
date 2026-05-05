@@ -1156,18 +1156,43 @@ function showTomatoSiege(count, names){
 // ── RENDER BAR ──
 function renderBar() {
   var bar = document.getElementById("bot"); bar.innerHTML = "";
-  PLAYERS.slice().sort(function(a,b){return b.pos-a.pos;}).forEach(function(p){
+  var sorted = PLAYERS.slice().sort(function(a,b){return b.pos-a.pos;});
+  var TOP = 5;
+  var topFive = sorted.slice(0, TOP);
+  var meInTop = ME && topFive.some(function(p){return p.id===ME.id;});
+  var toShow = topFive.slice();
+  if(ME && !meInTop){
+    var mePlayer = sorted.find(function(p){return p.id===ME.id;});
+    if(mePlayer) toShow.push(mePlayer);
+  }
+  var total = sorted.length;
+  toShow.forEach(function(p, idx){
     var isMe = ME && p.id===ME.id;
+    var rank = sorted.findIndex(function(r){return r.id===p.id;})+1;
+    var isGap = !meInTop && idx===TOP && TOP<total-1;
+    if(isGap){
+      var sep=document.createElement("div");
+      sep.style.cssText="display:flex;align-items:center;padding:0 6px;color:#4a3010;font-size:16px;flex-shrink:0;align-self:center";
+      sep.textContent="···";
+      bar.appendChild(sep);
+    }
     var d = document.createElement("div");
     d.className = "chip"+(isMe?" me":"");
     d.style.borderColor = isMe?p.brd:"#2a1a06";
-    d.innerHTML = '<div class="cav">'+charSVGHtml(p,36)+'</div><div>'
+    d.innerHTML = '<div style="font-family:Cinzel,serif;font-size:9px;color:#6a4a10;min-width:14px;text-align:center;margin-right:2px">#'+rank+'</div>'
+      +'<div class="cav">'+charSVGHtml(p,36)+'</div><div>'
       +'<div class="cn" style="color:'+p.brd+'">'+p.name+(isMe?' ★':'')+'</div>'
       +'<div class="cl">'+(p.pos===0?'Départ':WP[p.pos].n.split(" ")[0]+' · Case '+p.pos)+'</div>'
       +'<div class="cbar"><div class="cfill" style="width:'+Math.round(p.pos/24*100)+'%;background:'+p.brd+'"></div></div>'
       +'</div>';
     bar.appendChild(d);
   });
+  if(total > TOP){
+    var more=document.createElement("div");
+    more.style.cssText="display:flex;align-items:center;padding:0 8px;font-family:'Cinzel',serif;font-size:9px;color:#4a3010;flex-shrink:0;white-space:nowrap;letter-spacing:1px";
+    more.textContent="+ "+(total-TOP)+" joueurs";
+    bar.appendChild(more);
+  }
   var qb = document.createElement("div"); qb.className="chip";
   qb.style.cssText="border-color:#c8922a;background:rgba(200,146,42,.1);margin-left:auto;flex-shrink:0";
   qb.innerHTML='<div class="cav">📜</div><div><div class="cn" style="color:#c8922a">QUETE</div><div class="cl">Ce mois-ci</div></div>';
