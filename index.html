@@ -1179,7 +1179,8 @@ function showCongratsAnimation(title, names){
     },delay);
     delay+=nameDelay;
   });
-  var total=delay+1000;
+  var lastNameStart=delay-nameDelay;
+  var total=lastNameStart+31000;
   setTimeout(function(){
     titleEl.style.animation='congratsTitleOut 1.2s ease forwards';
     setTimeout(function(){container.innerHTML='';},1300);
