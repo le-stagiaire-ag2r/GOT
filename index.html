@@ -1326,8 +1326,10 @@ function renderBar() {
   bar.appendChild(card);
 
   var qb = document.createElement("div"); qb.className="chip";
-  qb.style.cssText="border-color:#c8922a;background:rgba(200,146,42,.1);margin-left:auto;flex-shrink:0;pointer-events:auto";
-  qb.innerHTML='<div class="cav">📜</div><div><div class="cn" style="color:#c8922a">QUETE</div><div class="cl">Ce mois-ci</div></div>';
+  qb.style.cssText="border-color:#c8922a;background:rgba(6,4,2,0.92);margin-left:auto;flex-shrink:0;pointer-events:auto;padding:10px 20px;gap:10px";
+  qb.innerHTML='<div style="font-size:26px;line-height:1;flex-shrink:0">📜</div>'
+    +'<div><div style="font-family:\'Cinzel\',serif;font-size:14px;letter-spacing:1.5px;color:#c8922a;font-weight:600">QUÊTE</div>'
+    +'<div style="font-size:10px;color:#8a6a30;letter-spacing:1px;margin-top:2px">Ce mois-ci</div></div>';
   qb.onclick=function(){tryOpenQuest();};
   bar.appendChild(qb);
 }
