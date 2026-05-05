@@ -1224,7 +1224,7 @@ function showTomatoSiege(count, names){
   var displayNames=names.length<=2?names.join(' et '):(names[0]+', '+names[1]+' et '+(names.length-2)+' autre'+(names.length-2>1?'s':''));
   var msg=count===1?'🍅 '+names[0]+' t\'a lancé une tomate !'
     :'🍅 Durant votre sommeil, vous avez été assiégé ! '+displayNames+' vous ont bombardé de '+count+' tomates !';
-  var splats=Math.min(count,3);
+  var splats=Math.min(count,10);
   for(var i=0;i<splats;i++){
     (function(idx,fromName){
       setTimeout(function(){
