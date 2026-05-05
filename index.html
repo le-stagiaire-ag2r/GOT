@@ -403,6 +403,19 @@ select.inp option{background:#0c0804;color:#f0ddb0}
 </div>
 <div id="notif"></div>
 
+<script>
+// Fallback indépendant du module — s'exécute toujours
+var _loaderTimeout=setTimeout(function(){
+  var l=document.getElementById('loader');
+  if(l&&l.style.display!=='none'&&!l.classList.contains('fade')){
+    document.getElementById('ldErr').style.display='block';
+    document.getElementById('ldRetry').style.display='inline-block';
+    var sp=l.querySelector('.ld-spin'); if(sp)sp.style.display='none';
+    var sb=l.querySelector('.ld-sub'); if(sb)sb.style.display='none';
+  }
+},8000);
+</script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
@@ -491,17 +504,8 @@ function genUUID(){
 // ── SCREENS ──
 function hideLoader(){
   var l=document.getElementById('loader');
-  if(l&&!l.classList.contains('fade')){l.classList.add('fade');setTimeout(function(){l.style.display='none';},520);}
+  if(l&&!l.classList.contains('fade')){clearTimeout(_loaderTimeout);l.classList.add('fade');setTimeout(function(){l.style.display='none';},520);}
 }
-var _loaderTimeout=setTimeout(function(){
-  var l=document.getElementById('loader');
-  if(l&&l.style.display!=='none'){
-    document.getElementById('ldErr').style.display='block';
-    document.getElementById('ldRetry').style.display='inline-block';
-    l.querySelector('.ld-spin').style.display='none';
-    l.querySelector('.ld-sub').style.display='none';
-  }
-},10000);
 
 function goTo(id) {
   hideLoader();
@@ -1978,7 +1982,6 @@ function sfxAdvance(){playFx('correct');}
   tick();
 })();
 hideLoader();
-clearTimeout(_loaderTimeout);
 </script>
 
 <!-- RESUME MODAL -->
