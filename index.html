@@ -1570,8 +1570,11 @@ async function deletePlayer(){
   }catch(e){document.getElementById("adminMsg4").textContent="Erreur.";}
 }
 function populateMonthSel(){
-  var sel=document.getElementById("adminMonth"); sel.innerHTML="";
-  QUESTIONS.forEach(function(q,i){sel.innerHTML+='<option value="'+i+'"'+(i===curMonth?" selected":"")+'>'+q.month+'</option>';});
+  var sel=document.getElementById("adminMonth");
+  sel.innerHTML=QUESTIONS.map(function(q,i){
+    var active=i===curMonth?' (ACTIF)':'';
+    return '<option value="'+i+'"'+(i===curMonth?' selected':'')+'>'+q.month+active+'</option>';
+  }).join('');
 }
 function populateStepSel(){
   var sel=document.getElementById("aStep");
@@ -1625,8 +1628,9 @@ async function publishQuest(){
   var lbl=document.getElementById("aMonthLabel"); if(lbl)lbl.value="";
   try{
     await updateDoc(doc(db,'gameState','main'),{questions:QUESTIONS});
-    document.getElementById("adminMsg2").textContent="Quête \""+monthName+"\" enregistrée. Activez-la quand vous voulez.";
     populateMonthSel();
+    document.getElementById("adminMonth").value=String(curMonth);
+    document.getElementById("adminMsg2").textContent="\""+monthName+"\" enregistrée — mois actif inchangé : "+(QUESTIONS[curMonth]?QUESTIONS[curMonth].month:'(aucun)');
   }catch(e){document.getElementById("adminMsg2").textContent="Erreur de publication.";}
 }
 async function setActiveMonth(){
