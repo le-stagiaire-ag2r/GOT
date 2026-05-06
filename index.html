@@ -1626,11 +1626,12 @@ async function publishQuest(){
   draftQuestions=[];
   refreshQPreview();
   var lbl=document.getElementById("aMonthLabel"); if(lbl)lbl.value="";
+  var activeMonth=curMonth;
   try{
-    await updateDoc(doc(db,'gameState','main'),{questions:QUESTIONS});
+    await updateDoc(doc(db,'gameState','main'),{questions:QUESTIONS, curMonth:activeMonth});
     populateMonthSel();
-    document.getElementById("adminMonth").value=String(curMonth);
-    document.getElementById("adminMsg2").textContent="\""+monthName+"\" enregistrée — mois actif inchangé : "+(QUESTIONS[curMonth]?QUESTIONS[curMonth].month:'(aucun)');
+    document.getElementById("adminMonth").value=String(activeMonth);
+    document.getElementById("adminMsg2").textContent="\""+monthName+"\" enregistrée — mois actif inchangé : "+(QUESTIONS[activeMonth]?QUESTIONS[activeMonth].month:'(aucun)');
   }catch(e){document.getElementById("adminMsg2").textContent="Erreur de publication.";}
 }
 async function setActiveMonth(){
