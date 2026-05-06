@@ -367,6 +367,9 @@ select.inp option{background:#0c0804;color:#f0ddb0}
         <div class="psep"></div>
         <div class="plbl">QUESTIONS CRÉÉES CE MOIS</div>
         <div id="qListPreview" style="font-size:11px;color:#7a5c1e;font-family:Cinzel,serif"></div>
+        <div class="plbl" style="margin-top:10px">NOM DE LA PÉRIODE</div>
+        <input class="inp" id="aMonthLabel" placeholder="Ex: Juin 2026, Août-Septembre 2026...">
+        <div style="font-size:9px;color:#5a4010;font-family:'Cinzel',serif;letter-spacing:1px;margin-top:3px;margin-bottom:6px">Laissez vide pour utiliser le mois actuel automatiquement</div>
         <button class="pbtn pbtn-g" onclick="publishQuest()" style="margin-top:8px">⚔ PUBLIER LE MOIS AUX JOUEURS</button>
         <div class="pmsg" id="adminMsg2"></div>
       </div>
@@ -1614,11 +1617,13 @@ async function publishQuest(){
   if(draftQuestions.length===0){document.getElementById("adminMsg2").textContent="Ajoutez au moins 1 question.";return;}
   var now=new Date();
   var months=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-  var monthName=months[now.getMonth()]+" "+now.getFullYear();
+  var customLabel=(document.getElementById("aMonthLabel")||{}).value;
+  var monthName=(customLabel&&customLabel.trim())?customLabel.trim():months[now.getMonth()]+" "+now.getFullYear();
   QUESTIONS.push({month:monthName,qs:draftQuestions.slice()});
   curMonth=QUESTIONS.length-1; curQ=0; monthScore=0; qAnswered=false;
   draftQuestions=[];
   refreshQPreview();
+  var lbl=document.getElementById("aMonthLabel"); if(lbl)lbl.value="";
   try{
     await setDoc(doc(db,'gameState','main'),{curMonth:curMonth,questions:QUESTIONS});
     document.getElementById("adminMsg2").textContent="Quête publiée pour "+monthName+" !";
