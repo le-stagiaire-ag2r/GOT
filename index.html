@@ -1620,14 +1620,12 @@ async function publishQuest(){
   var customLabel=(document.getElementById("aMonthLabel")||{}).value;
   var monthName=(customLabel&&customLabel.trim())?customLabel.trim():months[now.getMonth()]+" "+now.getFullYear();
   QUESTIONS.push({month:monthName,qs:draftQuestions.slice()});
-  curMonth=QUESTIONS.length-1; curQ=0; monthScore=0; qAnswered=false;
   draftQuestions=[];
   refreshQPreview();
   var lbl=document.getElementById("aMonthLabel"); if(lbl)lbl.value="";
   try{
-    await setDoc(doc(db,'gameState','main'),{curMonth:curMonth,questions:QUESTIONS});
-    document.getElementById("adminMsg2").textContent="Quête publiée pour "+monthName+" !";
-    notify("⚔ Nouvelle quête publiée !");
+    await updateDoc(doc(db,'gameState','main'),{questions:QUESTIONS});
+    document.getElementById("adminMsg2").textContent="Quête \""+monthName+"\" enregistrée. Activez-la quand vous voulez.";
     populateMonthSel();
   }catch(e){document.getElementById("adminMsg2").textContent="Erreur de publication.";}
 }
