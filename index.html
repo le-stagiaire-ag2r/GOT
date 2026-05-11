@@ -6,6 +6,8 @@
 <title>Westeros Conquest</title>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:ital,wght@0,400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -450,7 +452,7 @@ var _loaderTimeout=setTimeout(function(){
     var sp=l.querySelector('.ld-spin'); if(sp)sp.style.display='none';
     var sb=l.querySelector('.ld-sub'); if(sb)sb.style.display='none';
   }
-},8000);
+},4000);
 </script>
 
 <script type="module">
@@ -518,6 +520,8 @@ var firebaseConfig = {
 };
 var app = initializeApp(firebaseConfig);
 var db = getFirestore(app);
+// Firebase chargé — masquer le spinner immédiatement, avant même le reste du module
+hideLoader();
 
 var ME = null;
 var PLAYERS = [];
