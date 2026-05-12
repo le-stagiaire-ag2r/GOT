@@ -229,11 +229,34 @@ select.inp option{background:#0c0804;color:#f0ddb0}
     </div>
     <div class="bfoot">
       <button class="btn-main" onclick="startJourney()">CHOISIR MON AVATAR ⚔</button>
+      <div style="margin-top:10px;text-align:center">
+        <button onclick="showRecoveryInput()" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;background:transparent;border:1px solid #4a3010;color:#8a6a30;padding:8px 18px;cursor:pointer;width:100%">🔑 RÉCUPÉRER MA SESSION (code de récupération)</button>
+      </div>
+      <div id="recoveryInputWrap" style="display:none;margin-top:10px">
+        <input id="recoveryCodeInput" style="font-family:'Cinzel',serif;font-size:16px;letter-spacing:4px;text-transform:uppercase;width:100%;padding:12px;background:#0d0604;border:1px solid #c0392b;color:#fff;text-align:center" placeholder="XXXX-XXXX" maxlength="9">
+        <button onclick="recoverSession()" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:#c0392b;border:none;color:#fff;padding:10px;cursor:pointer;width:100%;margin-top:6px">RETROUVER MON COMPTE</button>
+        <div id="recoveryMsg" style="font-family:'Cinzel',serif;font-size:10px;color:#e74c3c;letter-spacing:1px;margin-top:6px;text-align:center"></div>
+      </div>
       <div style="margin-top:14px;font-family:'Cinzel',serif;font-size:11px;color:#c9a84c;letter-spacing:1px;text-align:center;line-height:1.6">
         ❓ En cas de problème ou question — contactez sur Teams :<br>
         <strong style="color:#f0d080">Paul Descamps</strong> <span style="color:#b89a50">(promis, il ne mord pas)</span>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- RECOVERY ALERT (shown once after avatar creation) -->
+<div id="recoveryAlert" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+  <div style="max-width:480px;width:100%;border:2px solid #c0392b;background:#0d0604;padding:28px 24px;font-family:'Cinzel',serif;text-align:center">
+    <div style="font-size:11px;color:#e74c3c;letter-spacing:3px;margin-bottom:10px">⚠ IMPORTANT — LISEZ AVANT DE CONTINUER</div>
+    <div style="font-size:18px;color:#f0d080;letter-spacing:2px;margin-bottom:18px;line-height:1.5">VOTRE CODE DE RÉCUPÉRATION</div>
+    <div id="recoveryCodeDisplay" style="font-size:36px;color:#ffffff;letter-spacing:6px;background:#1a0a04;border:2px solid #e74c3c;padding:16px 24px;margin:0 auto 18px;display:inline-block;font-weight:700"></div>
+    <div style="font-size:11px;color:#c0392b;letter-spacing:1.5px;line-height:1.8;margin-bottom:20px">
+      Si vous changez de PC, de navigateur ou si votre session est perdue,<br>
+      ce code vous permettra de <strong style="color:#f0d080">retrouver votre compte</strong>.<br><br>
+      <strong style="color:#e74c3c">📸 PRENEZ UNE CAPTURE D'ÉCRAN MAINTENANT</strong>
+    </div>
+    <button onclick="dismissRecoveryAlert()" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;background:#c0392b;border:none;color:#fff;padding:14px 32px;cursor:pointer;width:100%">✓ J'AI NOTÉ MON CODE — CONTINUER</button>
   </div>
 </div>
 
@@ -458,7 +481,7 @@ var _loaderTimeout=setTimeout(function(){
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, arrayUnion, deleteField, increment } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, arrayUnion, deleteField, increment, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 var WP = [
   {n:"Départ",                     x:760, y:1390, cross:false},
@@ -875,6 +898,44 @@ function randomizeChar(){
   renderCharPreview();
 }
 
+function genRecoveryCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var c='';
+  for(var i=0;i<8;i++){if(i===4)c+='-';c+=chars[Math.floor(Math.random()*chars.length)];}
+  return c;
+}
+window.showRecoveryInput=function(){
+  var w=document.getElementById('recoveryInputWrap');
+  w.style.display=w.style.display==='none'?'block':'none';
+};
+window.dismissRecoveryAlert=function(){
+  document.getElementById('recoveryAlert').style.display='none';
+  setTimeout(startTutorial,900);
+};
+window.recoverSession=async function(){
+  var code=document.getElementById('recoveryCodeInput').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,function(c){return c==='-'?'-':'';});
+  var msg=document.getElementById('recoveryMsg');
+  if(code.length<8){msg.textContent='Code invalide.';return;}
+  msg.textContent='Recherche en cours…';
+  try{
+    var q=query(collection(db,'players'),where('recoveryCode','==',code));
+    var snaps=await getDocs(q);
+    if(snaps.empty){msg.textContent='❌ Code introuvable. Vérifiez le code.';return;}
+    var pdoc=snaps.docs[0];
+    var pid=pdoc.id;
+    var data=pdoc.data();
+    localStorage.setItem('wc_playerId',pid);
+    ME={id:pid,name:data.name,avatarCfg:data.avatarCfg||null,avatar:data.avatar||null,pos:data.pos,col:data.col,brd:data.brd,tomatoes:data.tomatoes||0};
+    var curMName=(QUESTIONS[curMonth]&&QUESTIONS[curMonth].month)||'';
+    var sameMonth=curMName?(data.lastMonthName===curMName):(typeof data.lastMonth==='number'&&data.lastMonth===curMonth);
+    if(sameMonth){curQ=typeof data.curQ==='number'?data.curQ:0;monthScore=typeof data.monthScore==='number'?data.monthScore:0;}
+    updateBadge();
+    goTo('sGame');
+    resetView();
+    refresh();
+  }catch(e){msg.textContent='Erreur de connexion. Réessayez.';}
+};
+
 var _confirmBusy=false;
 async function confirmAvatar() {
   if(_confirmBusy) return;
@@ -886,15 +947,23 @@ async function confirmAvatar() {
     var snap = await getDoc(doc(db,'players',pid));
     var col = COLORS[PLAYERS.length % COLORS.length];
     var pos = 0;
-    if(snap.exists()){ col = snap.data().col; pos = snap.data().pos; }
+    var existingCode = null;
+    if(snap.exists()){ col = snap.data().col; pos = snap.data().pos; existingCode = snap.data().recoveryCode||null; }
+    var recoveryCode = existingCode || genRecoveryCode();
     ME = {id:pid, name:name, avatarCfg:Object.assign({},charCfg), pos:pos, col:col, brd:col};
-    await setDoc(doc(db,'players',pid), {name:name, avatarCfg:Object.assign({},charCfg), pos:pos, col:col, brd:col});
+    await setDoc(doc(db,'players',pid), {name:name, avatarCfg:Object.assign({},charCfg), pos:pos, col:col, brd:col, recoveryCode:recoveryCode});
     localStorage.setItem("wc_playerId", pid);
+    localStorage.setItem("wc_recovery", recoveryCode);
     updateBadge();
     goTo("sGame");
     resetView();
     refresh();
-    setTimeout(startTutorial, 900);
+    if(!existingCode){
+      document.getElementById('recoveryCodeDisplay').textContent=recoveryCode;
+      document.getElementById('recoveryAlert').style.display='flex';
+    } else {
+      setTimeout(startTutorial, 900);
+    }
   }catch(e){ notify("Erreur de connexion. Réessayez."); }
   _confirmBusy=false;
 }
