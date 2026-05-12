@@ -426,6 +426,7 @@ select.inp option{background:#0c0804;color:#f0ddb0}
         <div class="plbl">CODES DE RÉCUPÉRATION</div>
         <button class="pbtn pbtn-g" onclick="generateMissingCodes()">🔑 GÉNÉRER LES CODES MANQUANTS</button>
         <div class="pmsg" id="adminMsg9"></div>
+        <div id="recoveryCodesList" style="margin-top:8px"></div>
         <div class="psep"></div>
         <textarea class="inp" id="annInput" placeholder="Ex : Les nouvelles quêtes d'avril sont disponibles !" style="height:65px;resize:vertical"></textarea>
         <button class="pbtn pbtn-g" onclick="publishAnn()" style="margin-top:4px">📢 ENVOYER LE MESSAGE</button>
@@ -921,14 +922,24 @@ async function generateMissingCodes(){
     var snaps=await getDocs(collection(db,'players'));
     var batch=writeBatch(db);
     var count=0;
+    var players=[];
     snaps.forEach(function(pdoc){
-      if(!pdoc.data().recoveryCode){
-        batch.update(doc(db,'players',pdoc.id),{recoveryCode:genRecoveryCode()});
-        count++;
-      }
+      var d=pdoc.data();
+      var code=d.recoveryCode||null;
+      if(!code){code=genRecoveryCode();batch.update(doc(db,'players',pdoc.id),{recoveryCode:code});count++;}
+      players.push({name:d.name||'?',code:code});
     });
     if(count>0) await batch.commit();
-    msg.textContent=count>0?count+' code(s) généré(s) avec succès.':'Tous les joueurs ont déjà un code.';
+    msg.textContent=count>0?count+' code(s) généré(s).':'Tous les joueurs ont déjà un code.';
+    players.sort(function(a,b){return a.name.localeCompare(b.name);});
+    var list=document.getElementById('recoveryCodesList');
+    list.innerHTML='<div style="font-family:Cinzel,serif;font-size:9px;color:#6a4e14;letter-spacing:1px;margin-bottom:6px">CODES PAR JOUEUR — À ENVOYER SUR TEAMS</div>'
+      +players.map(function(p){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;margin-bottom:4px;background:rgba(255,255,255,.03);border:1px solid #2a1a06">'
+          +'<span style="font-family:Cinzel,serif;font-size:11px;color:#e8d4a0">'+p.name+'</span>'
+          +'<span style="font-family:monospace;font-size:13px;color:#f0d080;letter-spacing:3px;font-weight:700">'+p.code+'</span>'
+          +'</div>';
+      }).join('');
   }catch(e){msg.textContent='Erreur : '+e.message;}
 }
 window.generateMissingCodes=generateMissingCodes;
