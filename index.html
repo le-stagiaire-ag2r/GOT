@@ -423,7 +423,11 @@ select.inp option{background:#0c0804;color:#f0ddb0}
         <button class="pbtn pbtn-r" onclick="resetQuestions()">✕ VIDER LES MOIS PUBLIÉS</button>
         <div class="pmsg" id="adminMsg5"></div>
         <div class="psep"></div>
-        <div class="plbl">MESSAGE AUX JOUEURS</div>
+        <div class="plbl">CODES DE RÉCUPÉRATION</div>
+        <button class="pbtn pbtn-g" onclick="generateMissingCodes()">🔑 GÉNÉRER LES CODES MANQUANTS</button>
+        <div class="pmsg" id="adminMsg9"></div>
+        <div id="recoveryCodesList" style="margin-top:8px"></div>
+        <div class="psep"></div>
         <textarea class="inp" id="annInput" placeholder="Ex : Les nouvelles quêtes d'avril sont disponibles !" style="height:65px;resize:vertical"></textarea>
         <button class="pbtn pbtn-g" onclick="publishAnn()" style="margin-top:4px">📢 ENVOYER LE MESSAGE</button>
         <div class="pmsg" id="adminMsg6"></div>
@@ -628,7 +632,14 @@ async function startJourney() {
             }
           }
         }catch(e){}
-        setTimeout(startTutorial, 900);
+        // Montrer le code de récupération si le joueur ne l'a pas encore vu
+        if(data.recoveryCode && !localStorage.getItem('wc_recovery')){
+          localStorage.setItem('wc_recovery', data.recoveryCode);
+          document.getElementById('recoveryCodeDisplay').textContent = data.recoveryCode;
+          document.getElementById('recoveryAlert').style.display = 'flex';
+        } else {
+          setTimeout(startTutorial, 900);
+        }
         return;
       }
     }catch(e){}
@@ -904,6 +915,34 @@ function genRecoveryCode(){
   for(var i=0;i<8;i++){if(i===4)c+='-';c+=chars[Math.floor(Math.random()*chars.length)];}
   return c;
 }
+async function generateMissingCodes(){
+  var msg=document.getElementById('adminMsg9');
+  msg.textContent='Génération en cours…';
+  try{
+    var snaps=await getDocs(collection(db,'players'));
+    var batch=writeBatch(db);
+    var count=0;
+    var players=[];
+    snaps.forEach(function(pdoc){
+      var d=pdoc.data();
+      var code=d.recoveryCode||null;
+      if(!code){code=genRecoveryCode();batch.update(doc(db,'players',pdoc.id),{recoveryCode:code});count++;}
+      players.push({name:d.name||'?',code:code});
+    });
+    if(count>0) await batch.commit();
+    msg.textContent=count>0?count+' code(s) généré(s).':'Tous les joueurs ont déjà un code.';
+    players.sort(function(a,b){return a.name.localeCompare(b.name);});
+    var list=document.getElementById('recoveryCodesList');
+    list.innerHTML='<div style="font-family:Cinzel,serif;font-size:9px;color:#6a4e14;letter-spacing:1px;margin-bottom:6px">CODES PAR JOUEUR — À ENVOYER SUR TEAMS</div>'
+      +players.map(function(p){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;margin-bottom:4px;background:rgba(255,255,255,.03);border:1px solid #2a1a06">'
+          +'<span style="font-family:Cinzel,serif;font-size:11px;color:#e8d4a0">'+p.name+'</span>'
+          +'<span style="font-family:monospace;font-size:13px;color:#f0d080;letter-spacing:3px;font-weight:700">'+p.code+'</span>'
+          +'</div>';
+      }).join('');
+  }catch(e){msg.textContent='Erreur : '+e.message;}
+}
+window.generateMissingCodes=generateMissingCodes;
 window.showRecoveryInput=function(){
   var w=document.getElementById('recoveryInputWrap');
   w.style.display=w.style.display==='none'?'block':'none';
