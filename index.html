@@ -238,13 +238,20 @@ select.inp option{background:#0c0804;color:#f0ddb0}
         <div id="recoveryMsg" style="font-family:'Cinzel',serif;font-size:10px;color:#e74c3c;letter-spacing:1px;margin-top:6px;text-align:center"></div>
       </div>
       <div style="margin-top:14px;font-family:'Cinzel',serif;font-size:11px;color:#c9a84c;letter-spacing:1px;text-align:center;line-height:1.8;border:1px solid #3a2808;padding:12px;background:rgba(12,8,4,.6)">
-        ❓ En cas de problème ou question — contactez sur Teams :<br>
-        <strong style="color:#f0d080;font-size:13px">Paul Descamps</strong> <span style="color:#b89a50">(promis, il ne mord pas)</span><br>
-        <span style="color:#ffffff;font-size:10px;letter-spacing:1px;display:block;margin-top:6px">
-          ⚠ Vous avez oublié votre code de récupération ou vous étiez<br>
-          inscrit avant la mise à jour ? Contactez <strong style="color:#f0d080">Paul Descamps</strong><br>
-          sur Teams pour récupérer votre sauvegarde.
-        </span>
+        <div style="color:#f0d080;font-size:12px;letter-spacing:1.5px;margin-bottom:8px">🔑 VOUS N'AVEZ PAS VOTRE CODE ?</div>
+        <div style="color:#ffffff;font-size:10px;margin-bottom:6px">Sélectionnez votre pseudo dans la liste pour retrouver votre code de récupération.</div>
+        <div style="color:#9a7a38;font-size:9px;margin-bottom:10px;font-style:italic">⚔ Merci de jouer le jeu et de ne consulter que votre propre compte.</div>
+        <select id="codeByNameSel" class="inp" style="margin-bottom:6px;text-align:center"><option value="">-- Choisissez votre pseudo --</option></select>
+        <button onclick="showCodeByName()" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;background:#3a2808;border:1px solid #c9a84c;color:#f0d080;padding:9px;cursor:pointer;width:100%">AFFICHER MON CODE</button>
+        <div id="codeByNameResult" style="display:none;margin-top:10px;background:#0d0604;border:2px solid #c0392b;padding:14px">
+          <div style="font-size:10px;color:#e74c3c;letter-spacing:2px;margin-bottom:6px">⚠ NE LE PERDEZ PAS — PRENEZ UNE CAPTURE</div>
+          <div id="codeByNameValue" style="font-size:28px;color:#ffffff;letter-spacing:6px;font-weight:700;margin-bottom:6px"></div>
+          <div style="font-size:9px;color:#9a7a38;letter-spacing:1px">Utilisez ce code sur "Récupérer ma session" pour retrouver votre compte.</div>
+        </div>
+        <div style="border-top:1px solid #2a1808;margin-top:12px;padding-top:10px;color:#ffffff;font-size:10px;letter-spacing:1px">
+          ❓ Autre problème — contactez sur Teams :<br>
+          <strong style="color:#f0d080;font-size:13px">Paul Descamps</strong> <span style="color:#b89a50">(promis, il ne mord pas)</span>
+        </div>
       </div>
     </div>
   </div>
@@ -595,7 +602,7 @@ function goTo(id) {
   el.classList.add("active");
   if(id === "sAdmin") { populateAdminSel(); populateMonthSel(); refreshQPreview(); }
   if(id==='sAvatar'){_inGame=false;playBg('intro');initCharCreator();}
-  else if(id==='sRules'){_inGame=false;playBg('intro');}
+  else if(id==='sRules'){_inGame=false;playBg('intro');populateCodeByNameSel();}
   else if(id==='sGame'){_inGame=true;playBg('main');scheduleAmbient();}
 }
 
@@ -948,6 +955,38 @@ async function generateMissingCodes(){
   }catch(e){msg.textContent='Erreur : '+e.message;}
 }
 window.generateMissingCodes=generateMissingCodes;
+async function populateCodeByNameSel(){
+  var sel=document.getElementById('codeByNameSel');
+  if(!sel||sel.options.length>1) return;
+  try{
+    var snaps=await getDocs(collection(db,'players'));
+    var list=[];
+    snaps.forEach(function(pdoc){
+      var d=pdoc.data();
+      var loc=d.pos===0?'Départ':(WP[d.pos]?WP[d.pos].n:'Case '+d.pos);
+      list.push({id:pdoc.id,name:d.name||'?',loc:loc,code:d.recoveryCode||null});
+    });
+    list.sort(function(a,b){return a.name.localeCompare(b.name);});
+    list.forEach(function(p){
+      var opt=document.createElement('option');
+      opt.value=p.id;
+      opt.textContent=p.name+' — '+p.loc;
+      opt.dataset.code=p.code||'';
+      sel.appendChild(opt);
+    });
+  }catch(e){}
+}
+window.showCodeByName=function(){
+  var sel=document.getElementById('codeByNameSel');
+  var opt=sel.options[sel.selectedIndex];
+  var result=document.getElementById('codeByNameResult');
+  var val=document.getElementById('codeByNameValue');
+  if(!opt||!opt.value){result.style.display='none';return;}
+  var code=opt.dataset.code;
+  if(!code){val.textContent='Pas de code — contactez Paul Descamps.';}
+  else{val.textContent=code;}
+  result.style.display='block';
+};
 window.showRecoveryInput=function(){
   var w=document.getElementById('recoveryInputWrap');
   w.style.display=w.style.display==='none'?'block':'none';
@@ -1911,6 +1950,7 @@ document.querySelector(".brand").addEventListener("click",function(){
 
 initCharCreator();
 startListeners();
+populateCodeByNameSel();
 
 // ── EXPOSE AU DOM ──
 // ── MONTH RESUME ──
