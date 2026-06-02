@@ -18,13 +18,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#070f1e;font-family:
 .box{border:1px solid #6a4e14;background:rgba(12,8,4,.97);max-width:560px;width:94%;max-height:88vh;overflow-y:auto}
 .bhead{background:#140e06;padding:18px 24px;border-bottom:1px solid #3a2808;text-align:center}
 .btitle{font-family:'Cinzel Decorative',serif;font-size:20px;color:#c9a84c;letter-spacing:3px}
-.bsub{font-size:11px;color:#6a4e14;letter-spacing:3px;margin-top:4px;font-family:Cinzel,serif}
+.bsub{font-size:11px;color:#c9a84c;letter-spacing:3px;margin-top:4px;font-family:Cinzel,serif}
 .bbody{padding:24px}
 .bfoot{padding:18px 24px;border-top:1px solid #3a2808;text-align:center}
 .rule-item{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start}
 .ri{font-size:26px;flex-shrink:0;width:36px;text-align:center;filter:drop-shadow(0 0 6px rgba(201,168,76,0.5))}
-.rt h3{font-family:'Cinzel',serif;font-size:12px;color:#c9a84c;letter-spacing:1px;margin-bottom:4px}
-.rt p{font-size:13px;color:#c8aa6e;line-height:1.6}
+.rt h3{font-family:'Cinzel',serif;font-size:12px;color:#f0d080;letter-spacing:1px;margin-bottom:4px}
+.rt p{font-size:13px;color:#ffffff;line-height:1.6}
 #sAvatar{}
 .av-label{font-family:'Cinzel',serif;font-size:9px;color:#6a4e14;letter-spacing:2px;margin-bottom:6px}
 .av-input{width:100%;background:rgba(255,255,255,.05);border:1px solid #3a2808;color:#f0ddb0;padding:10px 12px;font-family:'Cinzel',serif;font-size:13px;outline:none;letter-spacing:1px}
@@ -269,6 +269,24 @@ select.inp option{background:#0c0804;color:#f0ddb0}
       <strong style="color:#e74c3c">📸 PRENEZ UNE CAPTURE D'ÉCRAN MAINTENANT</strong>
     </div>
     <button onclick="dismissRecoveryAlert()" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;background:#c0392b;border:none;color:#fff;padding:14px 32px;cursor:pointer;width:100%">✓ J'AI NOTÉ MON CODE — CONTINUER</button>
+  </div>
+</div>
+
+<!-- SESSION NOTICE POPUP (shown once after update) -->
+<div id="sessionNotice" style="display:none;position:fixed;inset:0;z-index:8500;background:rgba(0,0,0,0.92);flex-direction:column;align-items:center;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="max-width:500px;width:100%;border:2px solid #c9a84c;background:#0d0604;padding:26px 22px;font-family:'Cinzel',serif;text-align:center">
+    <div style="font-size:11px;color:#e74c3c;letter-spacing:3px;margin-bottom:10px">⚠ INFORMATION IMPORTANTE</div>
+    <div style="font-size:16px;color:#f0d080;letter-spacing:2px;margin-bottom:16px">MISE À JOUR DU JEU</div>
+    <div style="font-size:12px;color:#ffffff;line-height:2;margin-bottom:18px;text-align:left">
+      Suite à une mise à jour, les sauvegardes internes ont été déplacées de votre navigateur.<br><br>
+      <span style="color:#f0d080">🔑 Vous avez un code de récupération ?</span><br>
+      Insérez-le dans la section <strong>"RÉCUPÉRER MA SESSION"</strong> sur la page d'accueil pour retrouver votre compte.<br><br>
+      <span style="color:#f0d080">❓ Vous n'avez pas de code ?</span><br>
+      Descendez en bas de la page d'accueil — un menu déroulant liste tous les pseudos. Sélectionnez <strong>uniquement le vôtre</strong> pour faire apparaître votre code, puis insérez-le dans la section de récupération.<br><br>
+      <span style="color:#f0d080">🐉 Nouveau joueur ?</span><br>
+      Ignorez ce message et créez simplement votre avatar — votre code vous sera attribué automatiquement.
+    </div>
+    <button onclick="document.getElementById('sessionNotice').style.display='none';localStorage.setItem('wc_noticeV1','1')" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;background:#c9a84c;border:none;color:#0d0604;padding:14px 32px;cursor:pointer;width:100%;font-weight:700">J'AI COMPRIS ⚔</button>
   </div>
 </div>
 
@@ -1951,6 +1969,10 @@ document.querySelector(".brand").addEventListener("click",function(){
 initCharCreator();
 startListeners();
 populateCodeByNameSel();
+if(!localStorage.getItem('wc_noticeV1')){
+  var sn=document.getElementById('sessionNotice');
+  if(sn) sn.style.display='flex';
+}
 
 // ── EXPOSE AU DOM ──
 // ── MONTH RESUME ──
