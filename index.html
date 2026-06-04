@@ -671,10 +671,16 @@ async function startJourney() {
           setTimeout(startTutorial, 900);
         }
         return;
+      } else {
+        // Joueur supprimé de la BDD → on efface la session locale
+        localStorage.removeItem("wc_playerId");
+        localStorage.removeItem("wc_tuto");
       }
-    }catch(e){}
-    localStorage.removeItem("wc_playerId");
-    localStorage.removeItem("wc_tuto");
+    }catch(e){
+      // Erreur réseau → on garde le localStorage et on laisse le joueur réessayer
+      goTo("sAvatar");
+      return;
+    }
   }
   goTo("sAvatar");
 }
