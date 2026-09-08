@@ -1773,12 +1773,12 @@ function addQuestion(){
   if(!qtxt||!optA||!optB||!optC||!optD){
     document.getElementById("adminMsg1").textContent="Remplissez tous les champs."; return;
   }
-  if(draftQuestions.length>=3){
-    document.getElementById("adminMsg1").textContent="3 questions max. Publiez d abord."; return;
+  if(draftQuestions.length>=6){
+    document.getElementById("adminMsg1").textContent="6 questions max. Publiez d abord."; return;
   }
   draftQuestions.push({q:qtxt,opts:[optA,optB,optC,optD],c:correct,r:"Bonne reponse !",defn:defn});
   ["aQtxt","aOptA","aOptB","aOptC","aOptD","aDefn"].forEach(function(id){document.getElementById(id).value="";});
-  document.getElementById("adminMsg1").textContent="Question "+(draftQuestions.length)+"/3 ajoutee !";
+  document.getElementById("adminMsg1").textContent="Question "+(draftQuestions.length)+"/6 ajoutee !";
   refreshQPreview();
 }
 function removeDraftQ(i){draftQuestions.splice(i,1);refreshQPreview();}
