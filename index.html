@@ -981,7 +981,7 @@ async function generateMissingCodes(){
 window.generateMissingCodes=generateMissingCodes;
 async function populateCodeByNameSel(){
   var sel=document.getElementById('codeByNameSel');
-  if(!sel||sel.options.length>1) return;
+  if(!sel) return;
   try{
     var snaps=await getDocs(collection(db,'players'));
     var list=[];
@@ -991,6 +991,7 @@ async function populateCodeByNameSel(){
       list.push({id:pdoc.id,name:d.name||'?',loc:loc,code:d.recoveryCode||null});
     });
     list.sort(function(a,b){return a.name.localeCompare(b.name);});
+    sel.innerHTML='<option value="">-- Choisissez votre pseudo --</option>';
     list.forEach(function(p){
       var opt=document.createElement('option');
       opt.value=p.id;
